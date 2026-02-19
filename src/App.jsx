@@ -22,7 +22,7 @@ function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Navigate to="/dashboard/students" replace />
+            <Navigate to="/dashboard/dashboard" replace />
           </ProtectedRoute>
         }
       />
@@ -36,7 +36,7 @@ function App() {
       />
       <Route
         path="*"
-        element={<Navigate to={isAuthenticated() ? '/dashboard/students' : '/login'} replace />}
+        element={<Navigate to={isAuthenticated() ? '/dashboard/dashboard' : '/login'} replace />}
       />
     </Routes>
   )

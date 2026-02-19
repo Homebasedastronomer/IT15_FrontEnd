@@ -15,6 +15,7 @@ import {
 import { getCampusWeather } from '../services/weatherService'
 
 const navItems = [
+  { id: 'dashboard', label: 'Dashboard' },
   { id: 'students', label: 'Students' },
   { id: 'courses', label: 'Courses' },
   { id: 'enrollment', label: 'Enrollment' },
@@ -27,7 +28,7 @@ function DashboardPage() {
   const { section } = useParams()
   const user = localStorage.getItem('enrollment_user') || 'registrar@dollente.edu'
   const validSectionIds = useMemo(() => navItems.map((item) => item.id), [])
-  const activeSection = validSectionIds.includes(section) ? section : 'students'
+  const activeSection = validSectionIds.includes(section) ? section : 'dashboard'
 
   const [overview, setOverview] = useState([])
   const [enrollmentTrend, setEnrollmentTrend] = useState([])
@@ -55,11 +56,16 @@ function DashboardPage() {
 
   useEffect(() => {
     if (!section || !validSectionIds.includes(section)) {
-      navigate('/dashboard/students', { replace: true })
+      navigate('/dashboard/dashboard', { replace: true })
     }
   }, [navigate, section, validSectionIds])
 
   useEffect(() => {
+    if (activeSection === 'dashboard') {
+      setSectionRows([])
+      return
+    }
+
     const loadSection = async () => {
       const rows = await getSectionRecords(activeSection)
       setSectionRows(rows)
@@ -115,35 +121,7 @@ function DashboardPage() {
       title={`Enrollment Dashboard · ${sectionTitle}`}
       subtitle={`Signed in as ${user}`}
     >
-      <section className="panel records-panel">
-        <div className="panel-header">
-          <h3>{sectionTitle}</h3>
-          <p>Current records loaded from mock service</p>
-        </div>
-        <div className="records-table-wrap">
-          <table className="records-table">
-            <thead>
-              <tr>
-                {sectionRows[0] &&
-                  Object.keys(sectionRows[0]).map((col) => (
-                    <th key={col}>{col.replaceAll('_', ' ')}</th>
-                  ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sectionRows.map((row, rowIndex) => (
-                <tr key={`${activeSection}-${rowIndex}`}>
-                  {Object.entries(row).map(([key, value]) => (
-                    <td key={key}>{value}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {activeSection === 'students' && (
+      {activeSection === 'dashboard' ? (
         <>
           <OverviewCards overview={overview} />
           <EnrollmentCharts
@@ -156,6 +134,34 @@ function DashboardPage() {
             <ChatbotPanel onAskBot={askEnrollmentBot} />
           </section>
         </>
+      ) : (
+        <section className="panel records-panel">
+          <div className="panel-header">
+            <h3>{sectionTitle}</h3>
+            <p>Current records loaded from mock service</p>
+          </div>
+          <div className="records-table-wrap">
+            <table className="records-table">
+              <thead>
+                <tr>
+                  {sectionRows[0] &&
+                    Object.keys(sectionRows[0]).map((col) => (
+                      <th key={col}>{col.replaceAll('_', ' ')}</th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sectionRows.map((row, rowIndex) => (
+                  <tr key={`${activeSection}-${rowIndex}`}>
+                    {Object.entries(row).map(([key, value]) => (
+                      <td key={key}>{value}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </DashboardLayout>
   )

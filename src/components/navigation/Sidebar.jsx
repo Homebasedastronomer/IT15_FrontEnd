@@ -1,4 +1,5 @@
 const sectionIcons = {
+  dashboard: '🏠',
   students: '👩‍🎓',
   courses: '📚',
   enrollment: '📝',
