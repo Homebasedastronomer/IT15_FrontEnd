@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 
 function ChatbotPanel({ onAskBot }) {
   const [prompt, setPrompt] = useState('')
+
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -9,6 +10,7 @@ function ChatbotPanel({ onAskBot }) {
       text: 'Hello! I can answer quick enrollment and schedule questions.',
     },
   ])
+
   const [typing, setTyping] = useState(false)
 
   const canSend = useMemo(() => prompt.trim().length > 0 && !typing, [prompt, typing])
@@ -44,8 +46,8 @@ function ChatbotPanel({ onAskBot }) {
   return (
     <article className="panel chatbot-panel">
       <div className="panel-header">
-        <h3>Enrollment Assistant</h3>
-        <p>Prototype chatbot (mock AI service)</p>
+        <h3>Enrollment Assistant Chatbot</h3>
+
       </div>
 
       <div className="chat-stream">
@@ -54,6 +56,7 @@ function ChatbotPanel({ onAskBot }) {
             {message.text}
           </div>
         ))}
+
         {typing && <div className="chat-bubble bot">Typing a response...</div>}
       </div>
 

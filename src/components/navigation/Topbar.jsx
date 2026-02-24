@@ -1,4 +1,4 @@
-function Topbar({ title, subtitle }) {
+function Topbar({ title, subtitle, weather, weatherLoading }) {
   const dateLabel = new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
@@ -9,12 +9,13 @@ function Topbar({ title, subtitle }) {
     <header className="topbar">
       <div>
         <h2>{title}</h2>
-        <p>{subtitle}</p>
+        {subtitle ? <p>{subtitle}</p> : null}
       </div>
       <div className="topbar-meta">
-        <span className="live-badge">
-          <span className="live-dot" />
-          Live
+        <span className="weather-badge">
+          {weatherLoading || !weather
+            ? 'Weather loading...'
+            : `${Math.round(weather.temperature)}°C · ${weather.summary}`}
         </span>
         <div className="topbar-date">{dateLabel}</div>
       </div>

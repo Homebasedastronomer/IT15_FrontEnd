@@ -3,10 +3,10 @@ function WeatherWidget({ weather, loading, error }) {
     <article className="panel weather-panel">
       <div className="panel-header">
         <h3>Campus Weather</h3>
-        <p>Live forecast snapshot</p>
       </div>
 
       {loading && <p className="status-text">Loading weather...</p>}
+
       {error && !loading && <p className="status-text error">{error}</p>}
 
       {!loading && weather && (

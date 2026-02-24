@@ -18,6 +18,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+
       <Route
         path="/dashboard"
         element={
@@ -26,6 +27,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/dashboard/:section"
         element={
@@ -34,6 +36,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="*"
         element={<Navigate to={isAuthenticated() ? '/dashboard/dashboard' : '/login'} replace />}

@@ -25,6 +25,7 @@ export async function askEnrollmentBot(message) {
   await new Promise((resolve) => setTimeout(resolve, 650))
 
   const normalizedMessage = message.toLowerCase()
+
   const matched = cannedResponses.find((entry) =>
     entry.keywords.some((keyword) => normalizedMessage.includes(keyword)),
   )

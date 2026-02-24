@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import BrandMarkLogo from './BrandMarkLogo'
 
 function NavIcon({ section }) {
@@ -79,45 +80,67 @@ function NavIcon({ section }) {
   )
 }
 
-function Sidebar({ navItems, activeSection, onSelectSection, onLogout, userEmail }) {
+function MobileNavBar({ navItems, activeSection, onSelectSection, onLogout, userEmail }) {
+  const [open, setOpen] = useState(false)
+
+  const handleSelect = (sectionId) => {
+    onSelectSection(sectionId)
+    setOpen(false)
+  }
+
+  const activeLabel = navItems.find((item) => item.id === activeSection)?.label || 'Dashboard'
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="brand-mark" aria-hidden="true">
-          <BrandMarkLogo />
+    <section className="mobile-nav panel" aria-label="Mobile navigation">
+      <div className="mobile-nav-top">
+        <div className="mobile-brand">
+          <div className="brand-mark" aria-hidden="true">
+            <BrandMarkLogo />
+          </div>
+          <div>
+            <h1>Enrollment Suite</h1>
+            <p>{activeLabel}</p>
+          </div>
         </div>
-        <div>
-          <h1>ENROLLMENT SYSTEM</h1>
-          <p>UM Tagum College</p>
-        </div>
+
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setOpen((previous) => !previous)}
+          type="button"
+          aria-expanded={open}
+          aria-controls="mobile-menu-panel"
+        >
+          ☰
+        </button>
       </div>
 
-      <nav className="sidebar-nav">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            className={`sidebar-link ${activeSection === item.id ? 'active' : ''}`}
-            onClick={() => onSelectSection(item.id)}
-            type="button"
-          >
-            <span className="nav-icon">
-              <NavIcon section={item.id} />
-            </span>
-            {item.label}
+      {open ? (
+        <div className="mobile-menu-panel" id="mobile-menu-panel">
+          <p className="mobile-user">Signed in as {userEmail}</p>
+
+          <nav className="mobile-nav-links">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                className={`mobile-nav-link ${activeSection === item.id ? 'active' : ''}`}
+                onClick={() => handleSelect(item.id)}
+                type="button"
+              >
+                <span className="nav-icon">
+                  <NavIcon section={item.id} />
+                </span>
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          <button className="mobile-logout" onClick={onLogout} type="button">
+            Log out
           </button>
-        ))}
-      </nav>
-
-      <div className="sidebar-user">
-        <p>Signed in as</p>
-        <strong>{userEmail}</strong>
-      </div>
-
-      <button className="logout-btn" onClick={onLogout} type="button">
-        Log out
-      </button>
-    </aside>
+        </div>
+      ) : null}
+    </section>
   )
 }
 
-export default Sidebar
+export default MobileNavBar

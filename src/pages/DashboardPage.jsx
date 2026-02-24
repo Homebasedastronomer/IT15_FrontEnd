@@ -1,23 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import ChatbotPanel from '../components/dashboard/ChatbotPanel'
-import EnrollmentCharts from '../components/dashboard/EnrollmentCharts'
-import OverviewCards from '../components/dashboard/OverviewCards'
-import WeatherWidget from '../components/dashboard/WeatherWidget'
+import Dashboard from '../components/Dashboard'
+import Programlist from '../components/Programlist'
+import Subjectlist from '../components/Subjectlist'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { askEnrollmentBot } from '../services/chatbotService'
-import {
-  getCourseDistribution,
-  getDashboardOverview,
-  getEnrollmentTrend,
-  getSectionRecords,
-} from '../services/mockApi'
+import { getPrograms, getSubjects } from '../services/academicData'
+import { getSectionRecords } from '../services/mockApi'
 import { getCampusWeather } from '../services/weatherService'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard' },
+  { id: 'programs', label: 'Program Offerings' },
+  { id: 'subjects', label: 'Subject Offerings' },
   { id: 'students', label: 'Students' },
-  { id: 'courses', label: 'Courses' },
   { id: 'enrollment', label: 'Enrollment' },
   { id: 'reports', label: 'Reports' },
   { id: 'settings', label: 'Settings' },
@@ -26,32 +21,27 @@ const navItems = [
 function DashboardPage() {
   const navigate = useNavigate()
   const { section } = useParams()
+
   const user = localStorage.getItem('enrollment_user') || 'registrar@dollente.edu'
+
   const validSectionIds = useMemo(() => navItems.map((item) => item.id), [])
+
   const activeSection = validSectionIds.includes(section) ? section : 'dashboard'
 
-  const [overview, setOverview] = useState([])
-  const [enrollmentTrend, setEnrollmentTrend] = useState([])
-  const [courseDistribution, setCourseDistribution] = useState([])
+  const [programs, setPrograms] = useState([])
+  const [subjects, setSubjects] = useState([])
   const [sectionRows, setSectionRows] = useState([])
   const [weather, setWeather] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(true)
-  const [weatherError, setWeatherError] = useState('')
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      const [overviewData, trendData, distributionData] = await Promise.all([
-        getDashboardOverview(),
-        getEnrollmentTrend(),
-        getCourseDistribution(),
-      ])
-
-      setOverview(overviewData)
-      setEnrollmentTrend(trendData)
-      setCourseDistribution(distributionData)
+    const loadModules = async () => {
+      const [programData, subjectData] = await Promise.all([getPrograms(), getSubjects()])
+      setPrograms(programData)
+      setSubjects(subjectData)
     }
 
-    loadDashboard()
+    loadModules()
   }, [])
 
   useEffect(() => {
@@ -61,28 +51,12 @@ function DashboardPage() {
   }, [navigate, section, validSectionIds])
 
   useEffect(() => {
-    if (activeSection === 'dashboard') {
-      setSectionRows([])
-      return
-    }
-
-    const loadSection = async () => {
-      const rows = await getSectionRecords(activeSection)
-      setSectionRows(rows)
-    }
-
-    loadSection()
-  }, [activeSection])
-
-  useEffect(() => {
     const loadWeather = async () => {
       try {
         setWeatherLoading(true)
         const weatherData = await getCampusWeather()
         setWeather(weatherData)
-        setWeatherError('')
       } catch {
-        setWeatherError('Unable to fetch weather API data. Showing fallback values.')
         setWeather({
           temperature: 30,
           feelsLike: 33,
@@ -98,10 +72,59 @@ function DashboardPage() {
     loadWeather()
   }, [])
 
+  useEffect(() => {
+    const tableSections = ['students', 'enrollment', 'reports', 'settings']
+
+    if (!tableSections.includes(activeSection)) {
+      return
+    }
+
+    const loadRows = async () => {
+      const rows = await getSectionRecords(activeSection)
+      setSectionRows(rows)
+    }
+
+    loadRows()
+  }, [activeSection])
+
   const sectionTitle = useMemo(
-    () => navItems.find((item) => item.id === activeSection)?.label || 'Students',
+    () => navItems.find((item) => item.id === activeSection)?.label || 'Dashboard',
     [activeSection],
   )
+
+  const handleSaveProgram = (incomingProgram) => {
+    setPrograms((previous) => {
+      const existing = previous.some((program) => program.id === incomingProgram.id)
+      if (existing) {
+        return previous.map((program) =>
+          program.id === incomingProgram.id ? { ...program, ...incomingProgram } : program,
+        )
+      }
+
+      return [incomingProgram, ...previous]
+    })
+  }
+
+  const handleDeleteProgram = (programId) => {
+    setPrograms((previous) => previous.filter((program) => program.id !== programId))
+  }
+
+  const handleSaveSubject = (incomingSubject) => {
+    setSubjects((previous) => {
+      const existing = previous.some((subject) => subject.id === incomingSubject.id)
+      if (existing) {
+        return previous.map((subject) =>
+          subject.id === incomingSubject.id ? { ...subject, ...incomingSubject } : subject,
+        )
+      }
+
+      return [incomingSubject, ...previous]
+    })
+  }
+
+  const handleDeleteSubject = (subjectId) => {
+    setSubjects((previous) => previous.filter((subject) => subject.id !== subjectId))
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('enrollment_auth')
@@ -112,33 +135,129 @@ function DashboardPage() {
     navigate(`/dashboard/${sectionId}`)
   }
 
+  const exportRowsAsCsv = (rows, fileName) => {
+    if (!rows.length) {
+      window.alert('No data available to export.')
+      return
+    }
+
+    const columns = Object.keys(rows[0])
+    const escapeCell = (value) => {
+      const stringValue = String(value ?? '')
+      const escaped = stringValue.replaceAll('"', '""')
+      return `"${escaped}"`
+    }
+
+    const csv = [
+      columns.join(','),
+      ...rows.map((row) => columns.map((column) => escapeCell(row[column])).join(',')),
+    ].join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', fileName)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const sectionActions = useMemo(() => {
+    if (activeSection === 'students') {
+      return [
+        {
+          label: 'Add Student',
+          onClick: () => window.alert('Add Student form is a design-only action for this prototype.'),
+        },
+      ]
+    }
+
+    if (activeSection === 'enrollment') {
+      return [
+        {
+          label: 'Review Pending',
+          onClick: () => window.alert('Pending enrollment review action is available in backend integration.'),
+        },
+      ]
+    }
+
+    if (activeSection === 'reports') {
+      return [
+        {
+          label: 'Generate Report',
+          onClick: () => window.alert('Report generation is a design-only action for this prototype.'),
+        },
+        {
+          label: 'Export CSV',
+          onClick: () => exportRowsAsCsv(sectionRows, 'reports-export.csv'),
+          primary: true,
+        },
+      ]
+    }
+
+    if (activeSection === 'settings') {
+      return [
+        {
+          label: 'Save Settings',
+          onClick: () => window.alert('Settings save is a design-only action for this prototype.'),
+        },
+      ]
+    }
+
+    return []
+  }, [activeSection, sectionRows])
+
   return (
     <DashboardLayout
       navItems={navItems}
       activeSection={activeSection}
       onSelectSection={handleSelectSection}
       onLogout={handleLogout}
-      title={`Enrollment Dashboard · ${sectionTitle}`}
-      subtitle={`Signed in as ${user}`}
+      userEmail={user}
+      title={sectionTitle}
+      weather={weather}
+      weatherLoading={weatherLoading}
     >
-      {activeSection === 'dashboard' ? (
-        <>
-          <OverviewCards overview={overview} />
-          <EnrollmentCharts
-            enrollmentTrend={enrollmentTrend}
-            courseDistribution={courseDistribution}
-          />
+      {activeSection === 'dashboard' && <Dashboard programs={programs} subjects={subjects} />}
 
-          <section className="lower-grid">
-            <WeatherWidget weather={weather} loading={weatherLoading} error={weatherError} />
-            <ChatbotPanel onAskBot={askEnrollmentBot} />
-          </section>
-        </>
-      ) : (
+      {activeSection === 'programs' && (
+        <Programlist
+          programs={programs}
+          onSaveProgram={handleSaveProgram}
+          onDeleteProgram={handleDeleteProgram}
+        />
+      )}
+
+      {activeSection === 'subjects' && (
+        <Subjectlist
+          subjects={subjects}
+          programs={programs}
+          onSaveSubject={handleSaveSubject}
+          onDeleteSubject={handleDeleteSubject}
+        />
+      )}
+
+      {['students', 'enrollment', 'reports', 'settings'].includes(activeSection) && (
         <section className="panel records-panel">
-          <div className="panel-header">
-            <h3>{sectionTitle}</h3>
-            <p>Current records loaded from mock service</p>
+          <div className="records-header">
+            <div className="panel-header">
+              <h3>{sectionTitle}</h3>
+              <p>Current records loaded from mock service</p>
+            </div>
+            <div className="records-actions">
+              {sectionActions.map((action) => (
+                <button
+                  key={action.label}
+                  type="button"
+                  className={`records-action-btn ${action.primary ? 'primary' : ''}`}
+                  onClick={action.onClick}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="records-table-wrap">
             <table className="records-table">
