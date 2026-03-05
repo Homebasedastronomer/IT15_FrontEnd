@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
-import LoginPage from './pages/LoginPage'
+import LoginPage from './components/LoginPage'
 
 function isAuthenticated() {
   return localStorage.getItem('enrollment_auth') === 'true'

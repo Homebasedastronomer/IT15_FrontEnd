@@ -4,12 +4,36 @@ import { useNavigate } from 'react-router-dom'
 function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    localStorage.setItem('enrollment_auth', 'true')
-    localStorage.setItem('enrollment_user', form.email || 'registrar@dollente.edu')
-    navigate('/dashboard', { replace: true })
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('enrollment_auth', 'true')
+        localStorage.setItem('enrollment_user', form.email || 'registrar@dollente.edu')
+        navigate('/dashboard', { replace: true })
+      } else {
+        setError(data.message || 'Invalid credentials. Please try again.')
+      }
+    } catch {
+      setError('Unable to connect to server. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -73,7 +97,11 @@ function LoginPage() {
             onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
           />
 
-          <button type="submit">Enter Dashboard</button>
+          {error ? <p>{error}</p> : null}
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Signing in...' : 'Login'}
+          </button>
         </form>
       </section>
     </div>
