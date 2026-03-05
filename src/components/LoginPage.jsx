@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -13,24 +15,40 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, password: form.password }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('enrollment_auth', 'true')
-        localStorage.setItem('enrollment_user', form.email || 'registrar@dollente.edu')
-        navigate('/dashboard', { replace: true })
-      } else {
-        setError(data.message || 'Invalid credentials. Please try again.')
+      const credentials = {
+        email: form.email,
+        password: form.password,
       }
-    } catch {
-      setError('Unable to connect to server. Please try again.')
+
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, credentials)
+
+      if (response.data.token) {
+        localStorage.setItem('auth_token', response.data.token)
+        localStorage.setItem('enrollment_auth', 'true')
+        localStorage.setItem('enrollment_user', response.data?.user?.email ?? credentials.email)
+        navigate('/dashboard')
+      } else {
+        console.log('Still no token in the response data!')
+        setError('Login response did not include a token.')
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status
+        const apiMessage =
+          typeof err.response?.data?.message === 'string' ? err.response.data.message : null
+
+        if (status === 401) {
+          setError('Invalid credentials. Please try again.')
+        } else if (apiMessage) {
+          setError(apiMessage)
+        } else if (err.code === 'ERR_NETWORK') {
+          setError('Cannot reach the API server. Check VITE_API_URL and backend CORS.')
+        } else {
+          setError(`Login failed (status: ${status ?? 'no response'}).`)
+        }
+      } else {
+        setError('Unexpected error during login. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -49,25 +67,24 @@ function LoginPage() {
       </div>
 
       <section className="login-showcase">
-        <span className="pill">Integrative Programming Prototype</span>
-        <h1>Enrollment System Frontend</h1>
+        <h1>UMroll Enrollment System</h1>
         <p>
-          A responsive and API-ready academic control center for student registration, course
-          monitoring, and data-driven enrollment planning.
+          Manage student registration, class scheduling, and enrollment records in one secure
+          platform built for university registrar operations.
         </p>
 
         <div className="showcase-metrics">
           <article>
-            <h3>4,286</h3>
-            <p>Active Students</p>
+            <h3>12,480</h3>
+            <p>Enrolled Students</p>
           </article>
           <article>
-            <h3>97%</h3>
-            <p>Enrollment Completion</p>
+            <h3>342</h3>
+            <p>Open Course Sections</p>
           </article>
           <article>
-            <h3>162</h3>
-            <p>Courses Offered</p>
+            <h3>96.4%</h3>
+            <p>On-Time Enrollment Rate</p>
           </article>
         </div>
       </section>
@@ -88,14 +105,37 @@ function LoginPage() {
           />
 
           <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            required
-            placeholder="••••••••"
-            value={form.password}
-            onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-          />
+          <div className="password-input-wrap">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              placeholder="••••••••"
+              value={form.password}
+              onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 3l18 18" />
+                  <path d="M10.58 10.58a2 2 0 102.83 2.83" />
+                  <path d="M9.88 5.09A10.94 10.94 0 0112 4c5 0 9.27 3.11 11 8-1 2.83-3.06 5.08-5.74 6.31" />
+                  <path d="M6.61 6.61A12.24 12.24 0 001 12c1.73 4.89 6 8 11 8a10.94 10.94 0 006.91-2.42" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M1 12c1.73-4.89 6-8 11-8s9.27 3.11 11 8c-1.73 4.89-6 8-11 8S2.73 16.89 1 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {error ? <p>{error}</p> : null}
 

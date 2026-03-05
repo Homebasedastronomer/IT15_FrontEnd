@@ -87,7 +87,7 @@ function Sidebar({ navItems, activeSection, onSelectSection, onLogout, userEmail
           <BrandMarkLogo />
         </div>
         <div>
-          <h1>ENROLLMENT SYSTEM</h1>
+          <h1>UMroll Enrollment System</h1>
           <p>UM Tagum College</p>
         </div>
       </div>

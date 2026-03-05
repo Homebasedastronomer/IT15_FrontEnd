@@ -22,7 +22,30 @@ function DashboardPage() {
   const navigate = useNavigate()
   const { section } = useParams()
 
-  const user = localStorage.getItem('enrollment_user') || 'registrar@dollente.edu'
+  const getStoredUserEmail = () => {
+    const savedUser = localStorage.getItem('enrollment_user')
+
+    if (!savedUser) {
+      return 'No email found'
+    }
+
+    try {
+      const parsed = JSON.parse(savedUser)
+      if (typeof parsed === 'string') {
+        return parsed
+      }
+
+      if (parsed && typeof parsed.email === 'string') {
+        return parsed.email
+      }
+    } catch {
+      return savedUser
+    }
+
+    return savedUser
+  }
+
+  const user = getStoredUserEmail()
 
   const validSectionIds = useMemo(() => navItems.map((item) => item.id), [])
 
@@ -127,7 +150,9 @@ function DashboardPage() {
   }
 
   const handleLogout = () => {
+    localStorage.removeItem('auth_token')
     localStorage.removeItem('enrollment_auth')
+    localStorage.removeItem('enrollment_user')
     navigate('/login', { replace: true })
   }
 

@@ -98,7 +98,7 @@ function MobileNavBar({ navItems, activeSection, onSelectSection, onLogout, user
             <BrandMarkLogo />
           </div>
           <div>
-            <h1>Enrollment Suite</h1>
+            <h1>UMroll Enrollment System</h1>
             <p>{activeLabel}</p>
           </div>
         </div>
