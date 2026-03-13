@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import BrandMarkLogo from './BrandMarkLogo'
 
 function NavIcon({ section }) {
   const common = {
@@ -95,7 +94,7 @@ function MobileNavBar({ navItems, activeSection, onSelectSection, onLogout, user
       <div className="mobile-nav-top">
         <div className="mobile-brand">
           <div className="brand-mark" aria-hidden="true">
-            <BrandMarkLogo />
+            <img src="/umtc-logo.png" alt="UM Tagum College logo" className="brand-mark-image" />
           </div>
           <div>
             <h1>UMroll Enrollment System</h1>

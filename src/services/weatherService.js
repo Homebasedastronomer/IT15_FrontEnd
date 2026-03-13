@@ -55,7 +55,7 @@ async function getWeatherByCoordinates(latitude, longitude, locationLabel = 'Cam
   const params = new URLSearchParams({
     latitude,
     longitude,
-    current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m',
+    current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
     timezone: 'auto',
     forecast_days: '5',
@@ -88,6 +88,7 @@ async function getWeatherByCoordinates(latitude, longitude, locationLabel = 'Cam
     summary: toWeatherLabel(data.current.weather_code),
     windSpeed: data.current.wind_speed_10m,
     rainChance: data.daily.precipitation_probability_max?.[0] ?? 0,
+    isDay: data.current.is_day === 1,
     forecast,
   }
 }

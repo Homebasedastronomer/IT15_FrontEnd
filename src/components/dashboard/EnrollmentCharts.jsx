@@ -15,7 +15,40 @@ import {
 
 const pieColors = ['#4f8cff', '#46d6a9', '#f9b572', '#ad7bff', '#ff7da6']
 
+function CourseDistributionTooltip({ active, payload }) {
+  if (!active || !payload?.length) {
+    return null
+  }
+
+  const point = payload[0].payload
+
+  return (
+    <div className="chart-tooltip-card">
+      <p>{point.course}</p>
+      <strong>{point.students} students</strong>
+      <span>{point.share}% of total</span>
+    </div>
+  )
+}
+
 function EnrollmentCharts({ enrollmentTrend, courseDistribution, attendanceTrend }) {
+  const totalStudents = courseDistribution.reduce(
+    (accumulator, item) => accumulator + Number(item.students || 0),
+    0,
+  )
+
+  const distributionWithShare = courseDistribution
+    .map((item) => {
+      const students = Number(item.students || 0)
+      const share = totalStudents > 0 ? Math.round((students / totalStudents) * 100) : 0
+      return {
+        ...item,
+        students,
+        share,
+      }
+    })
+    .sort((a, b) => b.students - a.students)
+
   return (
     <section className="charts-grid">
       <article className="panel chart-panel">
@@ -39,36 +72,42 @@ function EnrollmentCharts({ enrollmentTrend, courseDistribution, attendanceTrend
       <article className="panel chart-panel">
         <div className="panel-header">
           <h3>Course Distribution</h3>
-          <p>Current students per department</p>
+          <p>{totalStudents} total students across all programs</p>
         </div>
         <div className="chart-wrap chart-split">
-          <ResponsiveContainer width="52%" height={250}>
+          <ResponsiveContainer width="56%" height={250}>
             <PieChart>
               <Pie
-                data={courseDistribution}
+                data={distributionWithShare}
                 cx="50%"
                 cy="50%"
                 innerRadius={60}
                 outerRadius={90}
                 dataKey="students"
+                nameKey="short"
               >
-                {courseDistribution.map((entry, index) => (
+                {distributionWithShare.map((entry, index) => (
                   <Cell key={entry.course} fill={pieColors[index % pieColors.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip content={<CourseDistributionTooltip />} />
             </PieChart>
           </ResponsiveContainer>
 
-          <ResponsiveContainer width="48%" height={250}>
-            <BarChart data={courseDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(125, 151, 194, 0.2)" />
-              <XAxis dataKey="short" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="students" radius={[8, 8, 0, 0]} fill="#4f8cff" />
-            </BarChart>
-          </ResponsiveContainer>
+          <ul className="chart-legend-list" aria-label="Course distribution details">
+            {distributionWithShare.map((entry, index) => (
+              <li key={entry.course}>
+                <span className="legend-name">
+                  <span className="legend-dot" style={{ background: pieColors[index % pieColors.length] }} />
+                  {entry.short || entry.course}
+                </span>
+                <div className="legend-metric">
+                  <strong>{entry.students}</strong>
+                  <span>{entry.share}%</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </article>
 

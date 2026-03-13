@@ -5,41 +5,102 @@ import Subjectdetails from './Subjectdetails'
 
 const MASTER_DELETE_CODE = 'DOLLENTE2026'
 
+const YEAR_LEVEL_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year']
+
+const inferYearLevelFromCode = (subjectCode = '') => {
+  const match = String(subjectCode).toUpperCase().match(/(\d)/)
+  if (!match) {
+    return '1st Year'
+  }
+
+  const yearDigit = Number(match[1])
+  if (yearDigit <= 1) {
+    return '1st Year'
+  }
+  if (yearDigit === 2) {
+    return '2nd Year'
+  }
+  if (yearDigit === 3) {
+    return '3rd Year'
+  }
+
+  return '4th Year'
+}
+
 function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
   const [query, setQuery] = useState('')
   const [semesterFilter, setSemesterFilter] = useState('all')
+  const [yearLevelFilter, setYearLevelFilter] = useState('all')
   const [unitsFilter, setUnitsFilter] = useState('all')
   const [preReqFilter, setPreReqFilter] = useState('all')
   const [programFilter, setProgramFilter] = useState('all')
   const [selectedSubject, setSelectedSubject] = useState(null)
   const [modalState, setModalState] = useState({ open: false, mode: 'add', subject: null })
+  const [preReqSelection, setPreReqSelection] = useState('')
 
   const initialForm = (subject = null) => ({
     code: subject?.code || '',
     title: subject?.title || '',
     units: subject?.units || 3,
+    yearLevel: subject?.yearLevel || inferYearLevelFromCode(subject?.code),
     offeredIn: subject?.offeredIn || '1st Semester',
     termIndicator: subject?.termIndicator || 'Per Semester',
     programCode: subject?.programCode || programs[0]?.code || '',
     description: subject?.description || '',
-    prerequisites: subject?.prerequisites?.join(', ') || '',
-    corequisites: subject?.corequisites?.join(', ') || '',
+    prerequisites: subject?.prerequisites || [],
   })
 
   const [formData, setFormData] = useState(initialForm())
 
   const openAddModal = () => {
     setFormData(initialForm())
+    setPreReqSelection('')
     setModalState({ open: true, mode: 'add', subject: null })
   }
 
   const openEditModal = (subject) => {
     setFormData(initialForm(subject))
+    setPreReqSelection('')
     setModalState({ open: true, mode: 'edit', subject })
   }
 
   const closeModal = () => {
+    setPreReqSelection('')
     setModalState({ open: false, mode: 'add', subject: null })
+  }
+
+  const selectableSubjectCodes = useMemo(() => {
+    return subjects
+      .filter((subject) => {
+        const matchesProgram = subject.programCode === formData.programCode
+        const isCurrentSubject = modalState.subject?.id && subject.id === modalState.subject.id
+        return matchesProgram && !isCurrentSubject
+      })
+      .sort((a, b) => a.code.localeCompare(b.code))
+  }, [subjects, formData.programCode, modalState.subject])
+
+  const addRequisiteCode = (field, code) => {
+    if (!code) {
+      return
+    }
+
+    setFormData((previous) => {
+      if (previous[field].includes(code)) {
+        return previous
+      }
+
+      return {
+        ...previous,
+        [field]: [...previous[field], code],
+      }
+    })
+  }
+
+  const removeRequisiteCode = (field, code) => {
+    setFormData((previous) => ({
+      ...previous,
+      [field]: previous[field].filter((item) => item !== code),
+    }))
   }
 
   const handleDeleteSubject = (subject) => {
@@ -80,6 +141,16 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
     [subjects],
   )
 
+  const yearLevelOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All Year Levels' },
+      ...Array.from(
+        new Set(subjects.map((subject) => subject.yearLevel || inferYearLevelFromCode(subject.code))),
+      ).map((value) => ({ value, label: value })),
+    ],
+    [subjects],
+  )
+
   const programOptions = useMemo(
     () => [
       { value: 'all', label: 'All Programs' },
@@ -95,6 +166,8 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
         subject.title.toLowerCase().includes(query.toLowerCase())
 
       const matchesSemester = semesterFilter === 'all' || subject.offeredIn === semesterFilter
+      const subjectYearLevel = subject.yearLevel || inferYearLevelFromCode(subject.code)
+      const matchesYearLevel = yearLevelFilter === 'all' || subjectYearLevel === yearLevelFilter
       const matchesUnits = unitsFilter === 'all' || String(subject.units) === unitsFilter
       const matchesProgram = programFilter === 'all' || subject.programCode === programFilter
       const hasPrerequisite = subject.prerequisites.length > 0
@@ -106,12 +179,13 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
       return (
         matchesQuery &&
         matchesSemester &&
+        matchesYearLevel &&
         matchesUnits &&
         matchesProgram &&
         matchesPrerequisite
       )
     })
-  }, [subjects, query, semesterFilter, unitsFilter, preReqFilter, programFilter])
+  }, [subjects, query, semesterFilter, yearLevelFilter, unitsFilter, preReqFilter, programFilter])
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -125,24 +199,18 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
       return
     }
 
-    const normalizeCodes = (value) =>
-      value
-        .split(',')
-        .map((item) => item.trim().toUpperCase())
-        .filter(Boolean)
-
     const subjectPayload = {
       ...modalState.subject,
       id: modalState.subject?.id || `s-${Date.now()}`,
       code: formData.code.toUpperCase(),
       title: formData.title,
       units: Number(formData.units),
+      yearLevel: formData.yearLevel,
       offeredIn: formData.offeredIn,
       termIndicator: formData.termIndicator,
       programCode: formData.programCode,
       description: formData.description,
-      prerequisites: normalizeCodes(formData.prerequisites),
-      corequisites: normalizeCodes(formData.corequisites),
+      prerequisites: formData.prerequisites,
       createdAt: modalState.subject?.createdAt || new Date().toISOString().slice(0, 10),
     }
 
@@ -170,6 +238,13 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
             value: unitsFilter,
             onChange: setUnitsFilter,
             options: unitsOptions,
+          },
+          {
+            key: 'yearLevel',
+            label: 'Year Level',
+            value: yearLevelFilter,
+            onChange: setYearLevelFilter,
+            options: yearLevelOptions,
           },
           {
             key: 'prerequisites',
@@ -212,7 +287,6 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
         ) : (
           <article className="panel module-empty-state">
             <h3>No subjects found</h3>
-            <p>Try broadening the search or clearing some filters.</p>
           </article>
         )}
       </div>
@@ -247,7 +321,6 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
           <div className="modal-card panel" role="dialog" aria-modal="true">
             <div className="panel-header">
               <h3>{modalState.mode === 'edit' ? 'Edit Subject' : 'Add Subject'}</h3>
-              <p>Frontend mock form only. No backend integration.</p>
             </div>
 
             <form className="module-form module-form-grid" onSubmit={handleSubmit}>
@@ -280,6 +353,21 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
                 />
               </label>
               <label>
+                Year Level
+                <select
+                  value={formData.yearLevel}
+                  onChange={(event) =>
+                    setFormData((prev) => ({ ...prev, yearLevel: event.target.value }))
+                  }
+                >
+                  {YEAR_LEVEL_OPTIONS.map((yearLevel) => (
+                    <option key={yearLevel} value={yearLevel}>
+                      {yearLevel}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
                 Semester/Term Offered
                 <input
                   value={formData.offeredIn}
@@ -307,7 +395,11 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
                 <select
                   value={formData.programCode}
                   onChange={(event) =>
-                    setFormData((prev) => ({ ...prev, programCode: event.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      programCode: event.target.value,
+                      prerequisites: [],
+                    }))
                   }
                   required
                 >
@@ -319,24 +411,44 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
                 </select>
               </label>
               <label className="form-span-2">
-                Pre-requisites (comma-separated)
-                <input
-                  value={formData.prerequisites}
-                  onChange={(event) =>
-                    setFormData((prev) => ({ ...prev, prerequisites: event.target.value }))
-                  }
-                  placeholder="e.g., IT101, MATH101"
-                />
-              </label>
-              <label className="form-span-2">
-                Co-requisites (comma-separated)
-                <input
-                  value={formData.corequisites}
-                  onChange={(event) =>
-                    setFormData((prev) => ({ ...prev, corequisites: event.target.value }))
-                  }
-                  placeholder="e.g., IT102"
-                />
+                Pre-requisites
+                <div className="inline-picker-row">
+                  <select
+                    value={preReqSelection}
+                    onChange={(event) => setPreReqSelection(event.target.value)}
+                  >
+                    <option value="">Select subject code</option>
+                    {selectableSubjectCodes.map((subjectOption) => (
+                      <option key={subjectOption.id} value={subjectOption.code}>
+                        {subjectOption.code} - {subjectOption.title}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addRequisiteCode('prerequisites', preReqSelection)
+                      setPreReqSelection('')
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+                {formData.prerequisites.length ? (
+                  <div className="inline-chip-wrap">
+                    {formData.prerequisites.map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        className="inline-chip"
+                        onClick={() => removeRequisiteCode('prerequisites', code)}
+                        title="Remove prerequisite"
+                      >
+                        {code} x
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </label>
               <label className="form-span-2">
                 Description

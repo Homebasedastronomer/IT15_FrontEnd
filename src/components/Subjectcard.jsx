@@ -1,4 +1,13 @@
 function Subjectcard({ subject, onSelect }) {
+  const yearLevel =
+    subject.yearLevel ||
+    ({
+      1: '1st Year',
+      2: '2nd Year',
+      3: '3rd Year',
+      4: '4th Year',
+    }[Number(subject.code?.match(/(\d)/)?.[1])] || '1st Year')
+
   return (
     <article className="panel module-card">
       <div className="module-card-header">
@@ -8,6 +17,7 @@ function Subjectcard({ subject, onSelect }) {
 
       <p className="module-card-title">{subject.title}</p>
       <p>{subject.units} Units</p>
+      <p>{yearLevel}</p>
       <p>{subject.offeredIn}</p>
       <p>Program: {subject.programCode}</p>
 

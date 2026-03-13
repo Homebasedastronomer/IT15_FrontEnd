@@ -3,6 +3,15 @@ function Subjectdetails({ subject, onEdit, onDelete }) {
     return null
   }
 
+  const yearLevel =
+    subject.yearLevel ||
+    ({
+      1: '1st Year',
+      2: '2nd Year',
+      3: '3rd Year',
+      4: '4th Year',
+    }[Number(subject.code?.match(/(\d)/)?.[1])] || '1st Year')
+
   return (
     <article className="panel module-detail-card subject-detail-card">
       <div className="panel-header">
@@ -15,6 +24,9 @@ function Subjectdetails({ subject, onEdit, onDelete }) {
       <div className="module-detail-grid">
         <p>
           <strong>Units:</strong> {subject.units}
+        </p>
+        <p>
+          <strong>Year Level:</strong> {yearLevel}
         </p>
         <p>
           <strong>Semester/Term Offered:</strong> {subject.offeredIn}
@@ -33,19 +45,6 @@ function Subjectdetails({ subject, onEdit, onDelete }) {
           {subject.prerequisites.length ? (
             <ul>
               {subject.prerequisites.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>none</p>
-          )}
-        </section>
-
-        <section className="year-level-card">
-          <h4>Co-requisites</h4>
-          {subject.corequisites.length ? (
-            <ul>
-              {subject.corequisites.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>

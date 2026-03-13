@@ -1,5 +1,3 @@
-import BrandMarkLogo from './BrandMarkLogo'
-
 function NavIcon({ section }) {
   const common = {
     width: 16,
@@ -84,11 +82,10 @@ function Sidebar({ navItems, activeSection, onSelectSection, onLogout, userEmail
     <aside className="sidebar">
       <div className="sidebar-brand">
         <div className="brand-mark" aria-hidden="true">
-          <BrandMarkLogo />
+          <img src="/umtc-logo.png" alt="UM Tagum College logo" className="brand-mark-image" />
         </div>
         <div>
           <h1>UMroll Enrollment System</h1>
-          <p>UM Tagum College</p>
         </div>
       </div>
 

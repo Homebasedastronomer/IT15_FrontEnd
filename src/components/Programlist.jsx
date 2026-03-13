@@ -9,7 +9,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [selectedProgram, setSelectedProgram] = useState(null)
+  const [selectedProgramId, setSelectedProgramId] = useState(null)
   const [modalState, setModalState] = useState({ open: false, mode: 'add', program: null })
 
   const statusOptions = useMemo(
@@ -45,6 +45,11 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       return matchesQuery && matchesStatus && matchesType
     })
   }, [programs, query, statusFilter, typeFilter])
+
+  const selectedProgram = useMemo(
+    () => programs.find((program) => program.id === selectedProgramId) || null,
+    [programs, selectedProgramId],
+  )
 
   const initialForm = (program) => ({
     code: program?.code || '',
@@ -85,7 +90,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
     }
 
     onDeleteProgram(program.id)
-    setSelectedProgram((previous) => (previous?.id === program.id ? null : previous))
+    setSelectedProgramId((previous) => (previous === program.id ? null : previous))
   }
 
   const handleSubmit = (event) => {
@@ -108,12 +113,6 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       totalUnits: Number(formData.totalUnits),
       status: formData.status,
       description: formData.description,
-      yearLevels: modalState.program?.yearLevels || {
-        '1st Year': [],
-        '2nd Year': [],
-        '3rd Year': [],
-        '4th Year': [],
-      },
       createdAt: modalState.program?.createdAt || new Date().toISOString().slice(0, 10),
     }
 
@@ -160,7 +159,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       <div className="module-grid">
         {filteredPrograms.length ? (
           filteredPrograms.map((program) => (
-            <Programcard key={program.id} program={program} onSelect={setSelectedProgram} />
+            <Programcard key={program.id} program={program} onSelect={(item) => setSelectedProgramId(item.id)} />
           ))
         ) : (
           <article className="panel module-empty-state">
@@ -171,7 +170,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       </div>
 
       {selectedProgram ? (
-        <div className="modal-backdrop" role="presentation" onClick={() => setSelectedProgram(null)}>
+        <div className="modal-backdrop" role="presentation" onClick={() => setSelectedProgramId(null)}>
           <div
             className="modal-card detail-modal panel"
             role="dialog"
@@ -179,14 +178,14 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="modal-actions modal-actions-top">
-              <button type="button" onClick={() => setSelectedProgram(null)}>
+              <button type="button" onClick={() => setSelectedProgramId(null)}>
                 Close
               </button>
             </div>
             <Programdetails
               program={selectedProgram}
               onEdit={(program) => {
-                setSelectedProgram(null)
+                setSelectedProgramId(null)
                 openEditModal(program)
               }}
               onDelete={handleDeleteProgram}

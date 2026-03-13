@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import Dashboard from '../components/Dashboard'
+import Dashboard from '../components/dashboard/Dashboard'
 import Programlist from '../components/Programlist'
 import Subjectlist from '../components/Subjectlist'
 import DashboardLayout from '../layouts/DashboardLayout'
-import { getPrograms, getSubjects } from '../services/academicData'
 import {
+  getPrograms,
+  getSubjects,
   getAttendanceTrend,
+  getCourseOptions,
   getCourseDistribution,
+  createStudentRecord,
   getEnrollmentTrend,
   getSectionRecords,
-} from '../services/mockApi'
+} from '../services/backendApi'
 import { getCampusWeather, getWeatherByLocation } from '../services/weatherService'
 
 const navItems = [
@@ -22,6 +25,28 @@ const navItems = [
   { id: 'reports', label: 'Reports' },
   { id: 'settings', label: 'Settings' },
 ]
+
+const YEAR_LEVEL_ORDER = ['1st Year', '2nd Year', '3rd Year', '4th Year']
+
+const inferYearLevelFromCode = (subjectCode = '') => {
+  const match = String(subjectCode).toUpperCase().match(/(\d)/)
+  if (!match) {
+    return '1st Year'
+  }
+
+  const yearDigit = Number(match[1])
+  if (yearDigit <= 1) {
+    return '1st Year'
+  }
+  if (yearDigit === 2) {
+    return '2nd Year'
+  }
+  if (yearDigit === 3) {
+    return '3rd Year'
+  }
+
+  return '4th Year'
+}
 
 function DashboardPage() {
   const navigate = useNavigate()
@@ -69,6 +94,21 @@ function DashboardPage() {
   const [weatherLoading, setWeatherLoading] = useState(true)
   const [weatherError, setWeatherError] = useState('')
   const [weatherSearchLoading, setWeatherSearchLoading] = useState(false)
+  const [sectionNotice, setSectionNotice] = useState('')
+  const [showAddStudentForm, setShowAddStudentForm] = useState(false)
+  const [creatingStudent, setCreatingStudent] = useState(false)
+  const [courseOptions, setCourseOptions] = useState([])
+  const [enrollmentPendingOnly, setEnrollmentPendingOnly] = useState(false)
+  const [studentForm, setStudentForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    gender: 'Male',
+    birth_date: '',
+    course_id: '',
+    year_level: '1',
+    status: 'Enrolled',
+  })
 
   useEffect(() => {
     const loadModules = async () => {
@@ -140,14 +180,54 @@ function DashboardPage() {
     const loadRows = async () => {
       try {
         setTableLoading(true)
-        const rows = await getSectionRecords(activeSection)
+        setSectionNotice('')
+        let rows = await getSectionRecords(activeSection)
+
+        if (activeSection === 'settings') {
+          const savedSettings = localStorage.getItem('umroll_settings')
+          if (savedSettings) {
+            try {
+              const parsed = JSON.parse(savedSettings)
+              if (Array.isArray(parsed)) {
+                rows = parsed
+              }
+            } catch {
+              // Ignore malformed persisted settings and use API/default rows.
+            }
+          }
+        }
+
         setSectionRows(rows)
+      } catch (err) {
+        setSectionRows([])
+        setSectionNotice(err.message || 'Unable to load records from backend.')
       } finally {
         setTableLoading(false)
       }
     }
 
     loadRows()
+  }, [activeSection])
+
+  useEffect(() => {
+    if (activeSection !== 'students') {
+      return
+    }
+
+    const loadCourseOptions = async () => {
+      try {
+        const courses = await getCourseOptions()
+        setCourseOptions(courses)
+        if (courses.length && !studentForm.course_id) {
+          setStudentForm((previous) => ({ ...previous, course_id: String(courses[0].id) }))
+        }
+      } catch (err) {
+        setCourseOptions([])
+        setSectionNotice(err.message || 'Unable to load program options.')
+      }
+    }
+
+    loadCourseOptions()
   }, [activeSection])
 
   const sectionTitle = useMemo(
@@ -242,12 +322,82 @@ function DashboardPage() {
     URL.revokeObjectURL(url)
   }
 
+  const saveSettings = () => {
+    localStorage.setItem('umroll_settings', JSON.stringify(sectionRows))
+    setSectionNotice('Settings saved locally.')
+  }
+
+  const handleStudentFormChange = (key, value) => {
+    setStudentForm((previous) => ({ ...previous, [key]: value }))
+  }
+
+  const handleCreateStudent = async (event) => {
+    event.preventDefault()
+
+    try {
+      setCreatingStudent(true)
+      setSectionNotice('')
+
+      await createStudentRecord({
+        ...studentForm,
+        course_id: Number(studentForm.course_id),
+        year_level: Number(studentForm.year_level),
+      })
+
+      const rows = await getSectionRecords('students')
+      setSectionRows(rows)
+      setShowAddStudentForm(false)
+      setSectionNotice('Student added successfully.')
+      setStudentForm((previous) => ({
+        ...previous,
+        first_name: '',
+        last_name: '',
+        email: '',
+        birth_date: '',
+      }))
+    } catch (err) {
+      setSectionNotice(err.message || 'Failed to add student.')
+    } finally {
+      setCreatingStudent(false)
+    }
+  }
+
+  const displayedRows = useMemo(() => {
+    if (activeSection === 'enrollment' && enrollmentPendingOnly) {
+      return sectionRows.filter((row) => Number(row.pending) > 0)
+    }
+
+    return sectionRows
+  }, [activeSection, enrollmentPendingOnly, sectionRows])
+
+  const programsWithComputedYearLevels = useMemo(() => {
+    return programs.map((program) => {
+      const computedYearLevels = YEAR_LEVEL_ORDER.reduce((accumulator, yearLevel) => {
+        accumulator[yearLevel] = []
+        return accumulator
+      }, {})
+
+      subjects
+        .filter((subject) => subject.programCode === program.code)
+        .forEach((subject) => {
+          const yearLevel = subject.yearLevel || inferYearLevelFromCode(subject.code)
+          const normalizedYearLevel = YEAR_LEVEL_ORDER.includes(yearLevel) ? yearLevel : '1st Year'
+          computedYearLevels[normalizedYearLevel].push(`${subject.code} - ${subject.title}`)
+        })
+
+      return {
+        ...program,
+        yearLevels: computedYearLevels,
+      }
+    })
+  }, [programs, subjects])
+
   const sectionActions = useMemo(() => {
     if (activeSection === 'students') {
       return [
         {
           label: 'Add Student',
-          onClick: () => window.alert('Add Student form is a design-only action for this prototype.'),
+          onClick: () => setShowAddStudentForm((previous) => !previous),
         },
       ]
     }
@@ -255,18 +405,14 @@ function DashboardPage() {
     if (activeSection === 'enrollment') {
       return [
         {
-          label: 'Review Pending',
-          onClick: () => window.alert('Pending enrollment review action is available in backend integration.'),
+          label: enrollmentPendingOnly ? 'Show All Batches' : 'Review Pending',
+          onClick: () => setEnrollmentPendingOnly((previous) => !previous),
         },
       ]
     }
 
     if (activeSection === 'reports') {
       return [
-        {
-          label: 'Generate Report',
-          onClick: () => window.alert('Report generation is a design-only action for this prototype.'),
-        },
         {
           label: 'Export CSV',
           onClick: () => exportRowsAsCsv(sectionRows, 'reports-export.csv'),
@@ -279,13 +425,13 @@ function DashboardPage() {
       return [
         {
           label: 'Save Settings',
-          onClick: () => window.alert('Settings save is a design-only action for this prototype.'),
+          onClick: saveSettings,
         },
       ]
     }
 
     return []
-  }, [activeSection, sectionRows])
+  }, [activeSection, enrollmentPendingOnly, sectionRows])
 
   return (
     <DashboardLayout
@@ -330,7 +476,7 @@ function DashboardPage() {
 
       {activeSection === 'programs' && (
         <Programlist
-          programs={programs}
+          programs={programsWithComputedYearLevels}
           onSaveProgram={handleSaveProgram}
           onDeleteProgram={handleDeleteProgram}
         />
@@ -350,7 +496,7 @@ function DashboardPage() {
           <div className="records-header">
             <div className="panel-header">
               <h3>{sectionTitle}</h3>
-              <p>Current records loaded from mock service</p>
+              <p>Current records loaded from backend service</p>
             </div>
             <div className="records-actions">
               {sectionActions.map((action) => (
@@ -366,6 +512,66 @@ function DashboardPage() {
             </div>
           </div>
           <div className="records-table-wrap">
+            {sectionNotice ? <p className="status-text">{sectionNotice}</p> : null}
+
+            {activeSection === 'students' && showAddStudentForm ? (
+              <form className="inline-student-form" onSubmit={handleCreateStudent}>
+                <input
+                  type="text"
+                  required
+                  placeholder="First name"
+                  value={studentForm.first_name}
+                  onChange={(event) => handleStudentFormChange('first_name', event.target.value)}
+                />
+                <input
+                  type="text"
+                  required
+                  placeholder="Last name"
+                  value={studentForm.last_name}
+                  onChange={(event) => handleStudentFormChange('last_name', event.target.value)}
+                />
+                <input
+                  type="email"
+                  required
+                  placeholder="Email"
+                  value={studentForm.email}
+                  onChange={(event) => handleStudentFormChange('email', event.target.value)}
+                />
+                <select
+                  value={studentForm.course_id}
+                  onChange={(event) => handleStudentFormChange('course_id', event.target.value)}
+                  required
+                >
+                  <option value="">Select program</option>
+                  {courseOptions.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.code} - {course.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={studentForm.year_level}
+                  onChange={(event) => handleStudentFormChange('year_level', event.target.value)}
+                >
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+                <select
+                  value={studentForm.status}
+                  onChange={(event) => handleStudentFormChange('status', event.target.value)}
+                >
+                  <option value="Enrolled">Enrolled</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Advised">Advised</option>
+                </select>
+                <button type="submit" disabled={creatingStudent}>
+                  {creatingStudent ? 'Adding...' : 'Create Student'}
+                </button>
+              </form>
+            ) : null}
+
             {tableLoading ? <p className="status-text">Loading records...</p> : null}
             <table className="records-table">
               <thead>
@@ -377,10 +583,24 @@ function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {sectionRows.map((row, rowIndex) => (
+                {displayedRows.map((row, rowIndex) => (
                   <tr key={`${activeSection}-${rowIndex}`}>
                     {Object.entries(row).map(([key, value]) => (
-                      <td key={key}>{value}</td>
+                      <td key={key}>
+                        {activeSection === 'settings' && key === 'value' ? (
+                          <input
+                            className="settings-inline-input"
+                            value={value}
+                            onChange={(event) => {
+                              const next = [...sectionRows]
+                              next[rowIndex] = { ...next[rowIndex], value: event.target.value }
+                              setSectionRows(next)
+                            }}
+                          />
+                        ) : (
+                          value
+                        )}
+                      </td>
                     ))}
                   </tr>
                 ))}

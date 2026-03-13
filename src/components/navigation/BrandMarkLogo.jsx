@@ -1,4 +1,19 @@
+import { useState } from 'react'
+
 function BrandMarkLogo() {
+  const [imageAvailable, setImageAvailable] = useState(true)
+
+  if (imageAvailable) {
+    return (
+      <img
+        src="/umtc-logo.png"
+        alt="UM Tagum College logo"
+        className="brand-mark-image"
+        onError={() => setImageAvailable(false)}
+      />
+    )
+  }
+
   return (
     <svg viewBox="0 0 64 64" role="img" aria-label="UMroll logo">
       <defs>

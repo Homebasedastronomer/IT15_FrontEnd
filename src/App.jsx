@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
-import LoginPage from './components/LoginPage'
+import Login from './components/auth/Login'
 
 function isAuthenticated() {
   return localStorage.getItem('enrollment_auth') === 'true'
@@ -17,7 +17,7 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<Login />} />
 
       <Route
         path="/dashboard"

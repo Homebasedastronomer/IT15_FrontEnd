@@ -11,12 +11,6 @@ const programs = [
     status: 'Active',
     description:
       'A program focused on software development, networking, and systems administration for industry-ready IT professionals.',
-    yearLevels: {
-      '1st Year': ['IT101 - Introduction to Computing', 'IT102 - Computer Programming 1'],
-      '2nd Year': ['IT201 - Data Structures and Algorithms', 'IT202 - Database Management Systems'],
-      '3rd Year': ['IT301 - Web Systems and Technologies', 'IT302 - Information Assurance and Security'],
-      '4th Year': ['IT401 - Capstone Project 1', 'IT402 - Capstone Project 2'],
-    },
     createdAt: '2026-02-19',
   },
   {
@@ -29,12 +23,6 @@ const programs = [
     status: 'Active',
     description:
       'A computing program centered on algorithms, artificial intelligence, and software engineering foundations.',
-    yearLevels: {
-      '1st Year': ['CS101 - Discrete Mathematics', 'CS102 - Computer Programming 1'],
-      '2nd Year': ['CS201 - Object Oriented Programming', 'CS202 - Computer Organization'],
-      '3rd Year': ['CS301 - Automata Theory', 'CS302 - Software Engineering'],
-      '4th Year': ['CS401 - Thesis 1', 'CS402 - Thesis 2'],
-    },
     createdAt: '2026-02-14',
   },
   {
@@ -47,12 +35,6 @@ const programs = [
     status: 'Under Review',
     description:
       'A blend of business processes and information technology with focus on enterprise systems and analytics.',
-    yearLevels: {
-      '1st Year': ['IS101 - Introduction to Information Systems', 'IS102 - Fundamentals of Business'],
-      '2nd Year': ['IS201 - Systems Analysis and Design', 'IS202 - Database Systems'],
-      '3rd Year': ['IS301 - Enterprise Architecture', 'IS302 - Business Intelligence'],
-      '4th Year': ['IS401 - Project Management', 'IS402 - Systems Integration'],
-    },
     createdAt: '2026-02-10',
   },
   {
@@ -65,94 +47,122 @@ const programs = [
     status: 'Phased Out',
     description:
       'A two-year diploma covering practical IT skills in support, productivity tools, and basic development.',
-    yearLevels: {
-      '1st Year': ['DIT101 - Computer Fundamentals', 'DIT102 - Productivity Tools'],
-      '2nd Year': ['DIT201 - Technical Support', 'DIT202 - Basic Web Development'],
-    },
     createdAt: '2026-01-22',
+  },
+  {
+    id: 'p-5',
+    code: 'BSCE',
+    name: 'Bachelor of Science in Computer Engineering',
+    type: "Bachelor's",
+    duration: '4 Years',
+    totalUnits: 168,
+    status: 'Active',
+    description:
+      'An engineering-centered program combining hardware systems, embedded software, and computing architecture.',
+    createdAt: '2026-02-06',
+  },
+  {
+    id: 'p-6',
+    code: 'BSCY',
+    name: 'Bachelor of Science in Cybersecurity',
+    type: "Bachelor's",
+    duration: '4 Years',
+    totalUnits: 164,
+    status: 'Active',
+    description:
+      'A security-focused program covering threat defense, incident response, digital forensics, and governance.',
+    createdAt: '2026-02-04',
+  },
+  {
+    id: 'p-7',
+    code: 'BSDA',
+    name: 'Bachelor of Science in Data Analytics',
+    type: "Bachelor's",
+    duration: '4 Years',
+    totalUnits: 161,
+    status: 'Active',
+    description:
+      'A data program focused on statistics, data engineering, machine learning, and business intelligence.',
+    createdAt: '2026-02-02',
+  },
+  {
+    id: 'p-8',
+    code: 'BSSE',
+    name: 'Bachelor of Science in Software Engineering',
+    type: "Bachelor's",
+    duration: '4 Years',
+    totalUnits: 166,
+    status: 'Active',
+    description:
+      'A software lifecycle-focused program emphasizing architecture, testing, delivery, and product quality.',
+    createdAt: '2026-01-31',
   },
 ]
 
-const subjects = [
-  {
-    id: 's-1',
-    code: 'IT101',
-    title: 'Introduction to Computing',
-    units: 3,
-    offeredIn: '1st Semester',
-    termIndicator: 'Per Semester',
-    programCode: 'BSIT',
-    description: 'Foundational concepts in computer systems, software, and digital literacy.',
-    prerequisites: [],
-    corequisites: [],
-    createdAt: '2026-02-20',
-  },
-  {
-    id: 's-2',
-    code: 'IT201',
-    title: 'Data Structures and Algorithms',
-    units: 3,
-    offeredIn: '2nd Semester',
-    termIndicator: 'Per Semester',
-    programCode: 'BSIT',
-    description: 'Abstract data types, algorithm analysis, and problem-solving techniques.',
-    prerequisites: ['IT102'],
-    corequisites: [],
-    createdAt: '2026-02-18',
-  },
-  {
-    id: 's-3',
-    code: 'CS301',
-    title: 'Automata Theory',
-    units: 3,
-    offeredIn: '1st Term',
-    termIndicator: 'Per Term',
-    programCode: 'BSCS',
-    description: 'Finite automata, regular languages, and computation models.',
-    prerequisites: ['CS201'],
-    corequisites: [],
-    createdAt: '2026-02-12',
-  },
-  {
-    id: 's-4',
-    code: 'IS301',
-    title: 'Enterprise Architecture',
-    units: 3,
-    offeredIn: '2nd Term',
-    termIndicator: 'Per Term',
-    programCode: 'BSIS',
-    description: 'Strategic alignment of business processes and information systems.',
-    prerequisites: ['IS201'],
-    corequisites: ['IS202'],
-    createdAt: '2026-02-09',
-  },
-  {
-    id: 's-5',
-    code: 'IT302',
-    title: 'Information Assurance and Security',
-    units: 3,
-    offeredIn: '2nd Semester',
-    termIndicator: 'Both',
-    programCode: 'BSIT',
-    description: 'Cybersecurity principles, risk management, and secure systems practices.',
-    prerequisites: ['IT201'],
-    corequisites: [],
-    createdAt: '2026-02-17',
-  },
-  {
-    id: 's-6',
-    code: 'DIT202',
-    title: 'Basic Web Development',
-    units: 2,
-    offeredIn: 'Summer Term',
-    termIndicator: 'Both',
-    programCode: 'DIT',
-    description: 'Introductory web development with HTML, CSS, and JavaScript basics.',
-    prerequisites: [],
-    corequisites: [],
-    createdAt: '2026-01-25',
-  },
-]
+const yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year']
+
+const courseBlueprintByYear = {
+  '1st Year': [
+    'Fundamentals of Computing',
+    'Programming Logic and Design',
+    'Digital Systems and Productivity',
+    'Mathematics for Computing',
+    'Communication and Technical Writing',
+  ],
+  '2nd Year': [
+    'Data Structures and Algorithms',
+    'Object-Oriented Programming',
+    'Database Systems',
+    'Human-Computer Interaction',
+    'Networking Essentials',
+  ],
+  '3rd Year': [
+    'Web Application Development',
+    'Information Security and Governance',
+    'Systems Analysis and Design',
+    'Cloud and Distributed Systems',
+    'Research Methods in IT',
+  ],
+  '4th Year': [
+    'Advanced Topics Seminar',
+    'Capstone Project 1',
+    'Capstone Project 2',
+    'Professional Practice and Ethics',
+    'Industry Internship',
+  ],
+}
+
+const toYearDigit = (yearLevel) => {
+  if (yearLevel === '1st Year') return 1
+  if (yearLevel === '2nd Year') return 2
+  if (yearLevel === '3rd Year') return 3
+  return 4
+}
+
+const offeredInByIndex = ['1st Semester', '1st Semester', '2nd Semester', '2nd Semester', 'Summer Term']
+
+const subjects = programs.flatMap((program, programIndex) => {
+  return yearLevels.flatMap((yearLevel) => {
+    return courseBlueprintByYear[yearLevel].map((courseTitle, courseIndex) => {
+      const yearDigit = toYearDigit(yearLevel)
+      const subjectCode = `${program.code}${yearDigit}${String(courseIndex + 1).padStart(2, '0')}`
+
+      return {
+        id: `s-${programIndex + 1}-${yearDigit}-${courseIndex + 1}`,
+        code: subjectCode,
+        title: `${courseTitle} (${program.code})`,
+        units: courseIndex === 4 ? 2 : 3,
+        yearLevel,
+        offeredIn: offeredInByIndex[courseIndex],
+        termIndicator: 'Per Semester',
+        programCode: program.code,
+        description: `${courseTitle} course under ${program.name}.`,
+        prerequisites: yearDigit > 1 && courseIndex < 2 ? [`${program.code}${yearDigit - 1}0${courseIndex + 1}`] : [],
+        createdAt: '2026-03-13',
+      }
+    })
+  })
+})
 
 export async function getPrograms() {
   await wait()
