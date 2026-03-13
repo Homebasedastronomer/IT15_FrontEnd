@@ -1,5 +1,28 @@
 const wait = (ms = 220) => new Promise((resolve) => setTimeout(resolve, ms))
 
+const API_BASE = import.meta.env.VITE_API_URL
+
+async function getJson(path) {
+  if (!API_BASE) {
+    throw new Error('API base URL not configured')
+  }
+
+  const token = localStorage.getItem('auth_token')
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`API request failed (${response.status})`)
+  }
+
+  return response.json()
+}
+
 const dashboardOverview = [
   { key: 'students', label: 'Total Students', value: '4,286', delta: '+6.2%', icon: '👩‍🎓' },
   { key: 'courses', label: 'Courses Offered', value: '162', delta: '+1.3%', icon: '📚' },
@@ -62,15 +85,85 @@ export async function getDashboardOverview() {
 
 export async function getEnrollmentTrend() {
   await wait()
-  return enrollmentTrend
+
+  try {
+    return await getJson('/dashboard/enrollment-trend')
+  } catch {
+    return enrollmentTrend
+  }
 }
 
 export async function getCourseDistribution() {
   await wait()
-  return courseDistribution
+
+  try {
+    return await getJson('/dashboard/course-distribution')
+  } catch {
+    return courseDistribution
+  }
+}
+
+export async function getAttendanceTrend() {
+  await wait()
+
+  try {
+    return await getJson('/dashboard/attendance-trend')
+  } catch {
+    const sample = Array.from({ length: 12 }, (_, index) => ({
+      date: `Day ${index + 1}`,
+      attendance: 82 + Math.round(Math.sin(index / 2) * 8) + (index % 3),
+    }))
+
+    return sample
+  }
 }
 
 export async function getSectionRecords(section) {
   await wait(280)
+
+  if (section === 'students') {
+    try {
+      const students = await getJson('/students')
+
+      return students.slice(0, 120).map((student) => ({
+        student_id: student.student_number,
+        full_name: `${student.first_name} ${student.last_name}`,
+        program: student.course?.code || 'N/A',
+        year: `${student.year_level}${student.year_level === 1 ? 'st' : student.year_level === 2 ? 'nd' : student.year_level === 3 ? 'rd' : 'th'}`,
+        status: student.status,
+      }))
+    } catch {
+      return sectionData.students
+    }
+  }
+
+  if (section === 'enrollment') {
+    try {
+      const trend = await getJson('/dashboard/enrollment-trend')
+      return trend.map((item) => ({
+        batch: `${item.month} Enrollment`,
+        submitted: item.enrolled,
+        approved: Math.max(0, item.enrolled - Math.round(item.enrolled * 0.08)),
+        pending: Math.round(item.enrolled * 0.08),
+      }))
+    } catch {
+      return sectionData.enrollment
+    }
+  }
+
+  if (section === 'reports') {
+    try {
+      const schoolDays = await getJson('/school-days')
+      return schoolDays.slice(0, 8).map((day) => ({
+        report: day.event_name || 'Daily Attendance Snapshot',
+        owner: 'Registrar Analytics',
+        generated: day.school_date,
+        status: day.is_holiday ? 'No Classes' : 'Published',
+      }))
+    } catch {
+      return sectionData.reports
+    }
+  }
+
   return sectionData[section] || []
 }

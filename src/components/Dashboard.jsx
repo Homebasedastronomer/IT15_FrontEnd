@@ -11,9 +11,22 @@ import {
   YAxis,
 } from 'recharts'
 import ChatbotPanel from './dashboard/ChatbotPanel'
+import EnrollmentCharts from './dashboard/EnrollmentCharts'
+import WeatherWidget from './dashboard/WeatherWidget'
 import { askEnrollmentBot } from '../services/chatbotService'
 
-function Dashboard({ programs, subjects }) {
+function Dashboard({
+  programs,
+  subjects,
+  enrollmentTrend,
+  courseDistribution,
+  attendanceTrend,
+  weather,
+  weatherLoading,
+  weatherError,
+  onSearchLocation,
+  weatherSearchLoading,
+}) {
   const activePrograms = programs.filter((program) => program.status === 'Active').length
   const inactivePrograms = programs.length - activePrograms
   const withPrerequisites = subjects.filter((subject) => subject.prerequisites.length > 0).length
@@ -150,6 +163,12 @@ function Dashboard({ programs, subjects }) {
         </article>
       </div>
 
+      <EnrollmentCharts
+        enrollmentTrend={enrollmentTrend}
+        courseDistribution={courseDistribution}
+        attendanceTrend={attendanceTrend}
+      />
+
       <section className="lower-grid">
         <article className="panel recent-panel">
           <div className="panel-header">
@@ -164,6 +183,13 @@ function Dashboard({ programs, subjects }) {
             ))}
           </ul>
         </article>
+        <WeatherWidget
+          weather={weather}
+          loading={weatherLoading}
+          error={weatherError}
+          onSearchLocation={onSearchLocation}
+          searchLoading={weatherSearchLoading}
+        />
         <ChatbotPanel onAskBot={askEnrollmentBot} />
       </section>
     </section>

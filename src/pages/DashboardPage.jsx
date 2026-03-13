@@ -5,8 +5,13 @@ import Programlist from '../components/Programlist'
 import Subjectlist from '../components/Subjectlist'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { getPrograms, getSubjects } from '../services/academicData'
-import { getSectionRecords } from '../services/mockApi'
-import { getCampusWeather } from '../services/weatherService'
+import {
+  getAttendanceTrend,
+  getCourseDistribution,
+  getEnrollmentTrend,
+  getSectionRecords,
+} from '../services/mockApi'
+import { getCampusWeather, getWeatherByLocation } from '../services/weatherService'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -53,15 +58,43 @@ function DashboardPage() {
 
   const [programs, setPrograms] = useState([])
   const [subjects, setSubjects] = useState([])
+  const [enrollmentTrend, setEnrollmentTrend] = useState([])
+  const [courseDistribution, setCourseDistribution] = useState([])
+  const [attendanceTrend, setAttendanceTrend] = useState([])
   const [sectionRows, setSectionRows] = useState([])
+  const [modulesLoading, setModulesLoading] = useState(true)
+  const [modulesError, setModulesError] = useState('')
+  const [tableLoading, setTableLoading] = useState(false)
   const [weather, setWeather] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(true)
+  const [weatherError, setWeatherError] = useState('')
+  const [weatherSearchLoading, setWeatherSearchLoading] = useState(false)
 
   useEffect(() => {
     const loadModules = async () => {
-      const [programData, subjectData] = await Promise.all([getPrograms(), getSubjects()])
-      setPrograms(programData)
-      setSubjects(subjectData)
+      try {
+        setModulesLoading(true)
+        setModulesError('')
+
+        const [programData, subjectData, trendData, distributionData, attendanceData] =
+          await Promise.all([
+            getPrograms(),
+            getSubjects(),
+            getEnrollmentTrend(),
+            getCourseDistribution(),
+            getAttendanceTrend(),
+          ])
+
+        setPrograms(programData)
+        setSubjects(subjectData)
+        setEnrollmentTrend(trendData)
+        setCourseDistribution(distributionData)
+        setAttendanceTrend(attendanceData)
+      } catch {
+        setModulesError('Unable to load dashboard data. Please refresh.')
+      } finally {
+        setModulesLoading(false)
+      }
     }
 
     loadModules()
@@ -77,9 +110,11 @@ function DashboardPage() {
     const loadWeather = async () => {
       try {
         setWeatherLoading(true)
+        setWeatherError('')
         const weatherData = await getCampusWeather()
         setWeather(weatherData)
       } catch {
+        setWeatherError('Weather service temporarily unavailable.')
         setWeather({
           temperature: 30,
           feelsLike: 33,
@@ -103,8 +138,13 @@ function DashboardPage() {
     }
 
     const loadRows = async () => {
-      const rows = await getSectionRecords(activeSection)
-      setSectionRows(rows)
+      try {
+        setTableLoading(true)
+        const rows = await getSectionRecords(activeSection)
+        setSectionRows(rows)
+      } finally {
+        setTableLoading(false)
+      }
     }
 
     loadRows()
@@ -158,6 +198,19 @@ function DashboardPage() {
 
   const handleSelectSection = (sectionId) => {
     navigate(`/dashboard/${sectionId}`)
+  }
+
+  const handleSearchWeatherLocation = async (cityName) => {
+    try {
+      setWeatherSearchLoading(true)
+      setWeatherError('')
+      const weatherData = await getWeatherByLocation(cityName)
+      setWeather(weatherData)
+    } catch (err) {
+      setWeatherError(err.message || 'Could not find that location.')
+    } finally {
+      setWeatherSearchLoading(false)
+    }
   }
 
   const exportRowsAsCsv = (rows, fileName) => {
@@ -245,7 +298,35 @@ function DashboardPage() {
       weather={weather}
       weatherLoading={weatherLoading}
     >
-      {activeSection === 'dashboard' && <Dashboard programs={programs} subjects={subjects} />}
+      {activeSection === 'dashboard' && modulesLoading && (
+        <section className="module-stack" aria-label="Loading dashboard modules">
+          <div className="skeleton-grid">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="panel skeleton-card" />
+            ))}
+          </div>
+          <div className="panel skeleton-chart" />
+        </section>
+      )}
+
+      {activeSection === 'dashboard' && !modulesLoading && modulesError && (
+        <section className="panel status-panel">{modulesError}</section>
+      )}
+
+      {activeSection === 'dashboard' && !modulesLoading && !modulesError && (
+        <Dashboard
+          programs={programs}
+          subjects={subjects}
+          enrollmentTrend={enrollmentTrend}
+          courseDistribution={courseDistribution}
+          attendanceTrend={attendanceTrend}
+          weather={weather}
+          weatherLoading={weatherLoading}
+          weatherError={weatherError}
+          onSearchLocation={handleSearchWeatherLocation}
+          weatherSearchLoading={weatherSearchLoading}
+        />
+      )}
 
       {activeSection === 'programs' && (
         <Programlist
@@ -285,6 +366,7 @@ function DashboardPage() {
             </div>
           </div>
           <div className="records-table-wrap">
+            {tableLoading ? <p className="status-text">Loading records...</p> : null}
             <table className="records-table">
               <thead>
                 <tr>

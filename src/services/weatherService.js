@@ -1,6 +1,7 @@
 const CAMPUS_COORDS = {
   latitude: 14.5995,
   longitude: 120.9842,
+  city: 'Tagum City',
 }
 
 function toWeatherLabel(code) {
@@ -15,16 +16,56 @@ function toWeatherLabel(code) {
 }
 
 export async function getCampusWeather() {
+  return getWeatherByCoordinates(CAMPUS_COORDS.latitude, CAMPUS_COORDS.longitude, CAMPUS_COORDS.city)
+}
+
+async function geocodeCity(cityName) {
   const params = new URLSearchParams({
-    latitude: CAMPUS_COORDS.latitude,
-    longitude: CAMPUS_COORDS.longitude,
+    name: cityName,
+    count: '1',
+    language: 'en',
+    format: 'json',
+  })
+
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params.toString()}`)
+
+  if (response.status === 429) {
+    throw new Error('Location search is rate-limited. Please try again shortly.')
+  }
+
+  if (!response.ok) {
+    throw new Error('Unable to geocode location')
+  }
+
+  const data = await response.json()
+  const first = data.results?.[0]
+
+  if (!first) {
+    throw new Error('Location not found')
+  }
+
+  return {
+    latitude: first.latitude,
+    longitude: first.longitude,
+    label: `${first.name}${first.country ? `, ${first.country}` : ''}`,
+  }
+}
+
+async function getWeatherByCoordinates(latitude, longitude, locationLabel = 'Campus') {
+  const params = new URLSearchParams({
+    latitude,
+    longitude,
     current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m',
-    daily: 'precipitation_probability_max',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
     timezone: 'auto',
-    forecast_days: '1',
+    forecast_days: '5',
   })
 
   const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`)
+
+  if (response.status === 429) {
+    throw new Error('Weather API rate limit reached. Please try again in a moment.')
+  }
 
   if (!response.ok) {
     throw new Error('Weather API request failed')
@@ -32,11 +73,26 @@ export async function getCampusWeather() {
 
   const data = await response.json()
 
+  const forecast = (data.daily.time || []).map((date, index) => ({
+    date,
+    summary: toWeatherLabel(data.daily.weather_code?.[index]),
+    high: data.daily.temperature_2m_max?.[index],
+    low: data.daily.temperature_2m_min?.[index],
+    rainChance: data.daily.precipitation_probability_max?.[index] ?? 0,
+  }))
+
   return {
+    location: locationLabel,
     temperature: data.current.temperature_2m,
     feelsLike: data.current.apparent_temperature,
     summary: toWeatherLabel(data.current.weather_code),
     windSpeed: data.current.wind_speed_10m,
     rainChance: data.daily.precipitation_probability_max?.[0] ?? 0,
+    forecast,
   }
+}
+
+export async function getWeatherByLocation(cityName) {
+  const location = await geocodeCity(cityName)
+  return getWeatherByCoordinates(location.latitude, location.longitude, location.label)
 }
