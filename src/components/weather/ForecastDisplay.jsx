@@ -11,7 +11,7 @@ const getForecastScene = (summary = '', isDay = true) => {
   return 'cloud'
 }
 
-const getForecastSceneFromCode = (code, isDay = true) => {
+export const getForecastSceneFromCode = (code, isDay = true) => {
   const numericCode = Number(code)
 
   if (numericCode === 0) return isDay ? 'sun' : 'moon'
@@ -35,7 +35,7 @@ const FORECAST_ICON_META = {
   storm: { label: 'Storm' },
 }
 
-function ForecastIcon({ type }) {
+export function ForecastIcon({ type }) {
   if (type === 'sun') {
     return (
       <svg viewBox="0 0 24 24" className="forecast-icon-svg" aria-hidden="true">

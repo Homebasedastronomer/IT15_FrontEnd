@@ -86,6 +86,7 @@ async function getWeatherByCoordinates(latitude, longitude, locationLabel = 'Cam
     location: locationLabel,
     temperature: data.current.temperature_2m,
     feelsLike: data.current.apparent_temperature,
+    weatherCode: data.current.weather_code,
     summary: toWeatherLabel(data.current.weather_code),
     windSpeed: data.current.wind_speed_10m,
     rainChance: data.daily.precipitation_probability_max?.[0] ?? 0,

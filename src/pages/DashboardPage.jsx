@@ -18,6 +18,8 @@ import {
   searchStudents,
   getStudentEnrollmentHistory,
   getSectionRecords,
+  saveProgramRecord,
+  deleteProgramRecord,
 } from '../services/backendApi'
 import { getCampusWeather, getWeatherByLocation } from '../services/weatherService'
 
@@ -386,30 +388,32 @@ function DashboardPage() {
     }
   }
 
-  const handleSaveProgram = (incomingProgram) => {
+  const handleSaveProgram = async (incomingProgram) => {
     const existing = programs.some((program) => program.id === incomingProgram.id)
+    const persisted = await saveProgramRecord(incomingProgram)
 
     setPrograms((previous) => {
       if (existing) {
-        return previous.map((program) =>
-          program.id === incomingProgram.id ? { ...program, ...incomingProgram } : program,
-        )
+        return previous.map((program) => (program.id === persisted.id ? persisted : program))
       }
 
-      return [incomingProgram, ...previous]
+      return [persisted, ...previous]
     })
 
     const action = existing ? 'Updated Program' : 'Added Program'
-    const details = `${incomingProgram.code || 'N/A'} - ${incomingProgram.name || 'Untitled Program'}`
-    void logUserActivity(action, details)
+    const details = `${persisted.code || 'N/A'} - ${persisted.name || 'Untitled Program'}`
+    await logUserActivity(action, details)
+
+    return persisted
   }
 
-  const handleDeleteProgram = (programId) => {
+  const handleDeleteProgram = async (programId) => {
     const target = programs.find((program) => program.id === programId)
+    await deleteProgramRecord(programId)
     setPrograms((previous) => previous.filter((program) => program.id !== programId))
 
     if (target) {
-      void logUserActivity('Deleted Program', `${target.code || 'N/A'} - ${target.name || 'Program'}`)
+      await logUserActivity('Deleted Program', `${target.code || 'N/A'} - ${target.name || 'Program'}`)
     }
   }
 

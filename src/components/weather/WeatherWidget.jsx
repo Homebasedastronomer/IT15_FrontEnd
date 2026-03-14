@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ForecastDisplay from './ForecastDisplay'
+import ForecastDisplay, { getForecastSceneFromCode } from './ForecastDisplay'
 
 const getWeatherTone = (summary = '') => {
   const normalized = summary.toLowerCase()
@@ -61,7 +61,9 @@ function WeatherWidget({ weather, loading, error, onSearchLocation, searchLoadin
   const tone = getWeatherTone(weather?.summary)
   const hourNow = new Date().getHours()
   const isDay = typeof weather?.isDay === 'boolean' ? weather.isDay : hourNow >= 6 && hourNow < 18
-  const scene = getWeatherScene(weather?.summary, isDay)
+  const scene = Number.isFinite(Number(weather?.weatherCode))
+    ? getForecastSceneFromCode(weather.weatherCode, isDay)
+    : getWeatherScene(weather?.summary, isDay)
   const dateLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',

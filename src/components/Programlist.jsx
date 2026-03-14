@@ -109,7 +109,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
     setModalState({ open: false, mode: 'add', program: null })
   }
 
-  const handleDeleteProgram = (program) => {
+  const handleDeleteProgram = async (program) => {
     const masterCode = window.prompt('Enter master code to delete this course:')
     if (masterCode !== MASTER_DELETE_CODE) {
       window.alert('Invalid master code. Delete action cancelled.')
@@ -121,11 +121,15 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       return
     }
 
-    onDeleteProgram(program.id)
-    setSelectedProgramId((previous) => (previous === program.id ? null : previous))
+    try {
+      await onDeleteProgram(program.id)
+      setSelectedProgramId((previous) => (previous === program.id ? null : previous))
+    } catch (error) {
+      window.alert(error?.message || 'Unable to delete course. Please try again.')
+    }
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (modalState.mode === 'edit') {
@@ -137,7 +141,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
 
     const programPayload = {
       ...modalState.program,
-      id: modalState.program?.id || `p-${Date.now()}`,
+      id: modalState.program?.id,
       code: formData.code.toUpperCase(),
       name: formData.name,
       department: formData.department,
@@ -149,8 +153,12 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       createdAt: modalState.program?.createdAt || new Date().toISOString().slice(0, 10),
     }
 
-    onSaveProgram(programPayload)
-    closeModal()
+    try {
+      await onSaveProgram(programPayload)
+      closeModal()
+    } catch (error) {
+      window.alert(error?.message || 'Unable to save course changes. Please try again.')
+    }
   }
 
   return (

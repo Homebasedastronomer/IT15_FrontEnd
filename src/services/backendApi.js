@@ -96,6 +96,34 @@ export async function getPrograms() {
   return toArray(data)
 }
 
+const toProgramPayload = (payload) => ({
+  code: String(payload?.code || '').trim().toUpperCase(),
+  name: String(payload?.name || '').trim(),
+  department: String(payload?.department || '').trim(),
+  status: String(payload?.status || 'Active').trim(),
+})
+
+export async function saveProgramRecord(payload) {
+  ensureConfigured()
+
+  const programPayload = toProgramPayload(payload)
+  const hasId = payload?.id !== null && payload?.id !== undefined && String(payload.id).trim() !== ''
+
+  if (hasId) {
+    const { data } = await api.put(`/programs/${payload.id}`, programPayload)
+    return data
+  }
+
+  const { data } = await api.post('/programs', programPayload)
+  return data
+}
+
+export async function deleteProgramRecord(programId) {
+  ensureConfigured()
+  const encoded = encodeURIComponent(String(programId))
+  await api.delete(`/programs/${encoded}`)
+}
+
 export async function getSubjects() {
   const data = await getJson('/subjects')
   return toArray(data)
