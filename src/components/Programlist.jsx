@@ -9,6 +9,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
+  const [departmentFilter, setDepartmentFilter] = useState('all')
   const [selectedProgramId, setSelectedProgramId] = useState(null)
   const [modalState, setModalState] = useState({ open: false, mode: 'add', program: null })
 
@@ -16,8 +17,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
     () => [
       { value: 'all', label: 'All Status' },
       { value: 'Active', label: 'Active' },
-      { value: 'Phased Out', label: 'Phased Out' },
-      { value: 'Under Review', label: 'Under Review' },
+      { value: 'Inactive', label: 'Inactive' },
     ],
     [],
   )
@@ -33,6 +33,17 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
     [programs],
   )
 
+  const departmentOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All Departments' },
+      ...Array.from(new Set(programs.map((program) => program.department).filter(Boolean))).map((department) => ({
+        value: department,
+        label: department,
+      })),
+    ],
+    [programs],
+  )
+
   const filteredPrograms = useMemo(() => {
     return programs.filter((program) => {
       const matchesQuery =
@@ -41,10 +52,22 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
 
       const matchesStatus = statusFilter === 'all' || program.status === statusFilter
       const matchesType = typeFilter === 'all' || program.type === typeFilter
+      const matchesDepartment = departmentFilter === 'all' || program.department === departmentFilter
 
-      return matchesQuery && matchesStatus && matchesType
+      return matchesQuery && matchesStatus && matchesType && matchesDepartment
     })
-  }, [programs, query, statusFilter, typeFilter])
+  }, [programs, query, statusFilter, typeFilter, departmentFilter])
+
+  const groupedPrograms = useMemo(() => {
+    return filteredPrograms.reduce((accumulator, program) => {
+      const department = program.department || 'Unassigned Department'
+      if (!accumulator[department]) {
+        accumulator[department] = []
+      }
+      accumulator[department].push(program)
+      return accumulator
+    }, {})
+  }, [filteredPrograms])
 
   const selectedProgram = useMemo(
     () => programs.find((program) => program.id === selectedProgramId) || null,
@@ -54,6 +77,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
   const initialForm = (program) => ({
     code: program?.code || '',
     name: program?.name || '',
+    department: program?.department || '',
     type: program?.type || "Bachelor's",
     duration: program?.duration || '4 Years',
     totalUnits: program?.totalUnits || 0,
@@ -62,6 +86,14 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
   })
 
   const [formData, setFormData] = useState(initialForm(null))
+
+  const courseDepartmentOptions = useMemo(() => {
+    const values = new Set(programs.map((program) => program.department).filter(Boolean))
+    if (formData.department) {
+      values.add(formData.department)
+    }
+    return Array.from(values).sort()
+  }, [programs, formData.department])
 
   const openAddModal = () => {
     setFormData(initialForm(null))
@@ -78,13 +110,13 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
   }
 
   const handleDeleteProgram = (program) => {
-    const masterCode = window.prompt('Enter master code to delete this program:')
+    const masterCode = window.prompt('Enter master code to delete this course:')
     if (masterCode !== MASTER_DELETE_CODE) {
       window.alert('Invalid master code. Delete action cancelled.')
       return
     }
 
-    const shouldDelete = window.confirm(`Delete program ${program.code}?`)
+    const shouldDelete = window.confirm(`Delete course ${program.code}?`)
     if (!shouldDelete) {
       return
     }
@@ -97,7 +129,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
     event.preventDefault()
 
     if (modalState.mode === 'edit') {
-      const shouldProceed = window.confirm('Proceed with saving changes to this program?')
+      const shouldProceed = window.confirm('Proceed with saving changes to this course?')
       if (!shouldProceed) {
         return
       }
@@ -108,6 +140,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       id: modalState.program?.id || `p-${Date.now()}`,
       code: formData.code.toUpperCase(),
       name: formData.name,
+      department: formData.department,
       type: formData.type,
       duration: formData.duration,
       totalUnits: Number(formData.totalUnits),
@@ -123,7 +156,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
   return (
     <section className="module-stack">
       <Filterbar
-        searchPlaceholder="Search by program code or name"
+        searchPlaceholder="Search by course code or name"
         searchValue={query}
         onSearchChange={setQuery}
         filters={[
@@ -136,15 +169,22 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
           },
           {
             key: 'type',
-            label: 'Program Type',
+            label: 'Course Type',
             value: typeFilter,
             onChange: setTypeFilter,
             options: typeOptions,
           },
+          {
+            key: 'department',
+            label: 'Department',
+            value: departmentFilter,
+            onChange: setDepartmentFilter,
+            options: departmentOptions,
+          },
         ]}
         actionButton={
           <button type="button" className="module-primary-btn" onClick={openAddModal}>
-            Add Program
+            Add Course
           </button>
         }
       />
@@ -152,22 +192,34 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
       <div className="module-meta-row panel">
         <p>
           Showing <strong>{filteredPrograms.length}</strong> of <strong>{programs.length}</strong>{' '}
-          programs
+          courses
         </p>
       </div>
 
-      <div className="module-grid">
-        {filteredPrograms.length ? (
-          filteredPrograms.map((program) => (
-            <Programcard key={program.id} program={program} onSelect={(item) => setSelectedProgramId(item.id)} />
+      {filteredPrograms.length ? (
+        Object.entries(groupedPrograms)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([department, departmentPrograms]) => (
+            <section key={department} className="module-stack" aria-label={`${department} department courses`}>
+              <div className="module-meta-row panel">
+                <p>
+                  <strong>{department}</strong> Department · <strong>{departmentPrograms.length}</strong>{' '}
+                  course(s)
+                </p>
+              </div>
+              <div className="module-grid">
+                {departmentPrograms.map((program) => (
+                  <Programcard key={program.id} program={program} onSelect={(item) => setSelectedProgramId(item.id)} />
+                ))}
+              </div>
+            </section>
           ))
-        ) : (
-          <article className="panel module-empty-state">
-            <h3>No programs found</h3>
-            <p>Try adjusting your search text or selected filters.</p>
-          </article>
-        )}
-      </div>
+      ) : (
+        <article className="panel module-empty-state">
+          <h3>No courses found</h3>
+          <p>Try adjusting your search text or selected filters.</p>
+        </article>
+      )}
 
       {selectedProgram ? (
         <div className="modal-backdrop" role="presentation" onClick={() => setSelectedProgramId(null)}>
@@ -198,12 +250,12 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
         <div className="modal-backdrop" role="presentation">
           <div className="modal-card panel" role="dialog" aria-modal="true">
             <div className="panel-header">
-              <h3>{modalState.mode === 'add' ? 'Add Program' : 'Edit Program'}</h3>
+              <h3>{modalState.mode === 'add' ? 'Add Course' : 'Edit Course'}</h3>
              
             </div>
             <form className="module-form module-form-grid" onSubmit={handleSubmit}>
               <label>
-                Program Code
+                Course Code
                 <input
                   value={formData.code}
                   onChange={(event) => setFormData((prev) => ({ ...prev, code: event.target.value }))}
@@ -211,7 +263,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
                 />
               </label>
               <label className="form-span-2">
-                Program Name
+                Course Name
                 <input
                   value={formData.name}
                   onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
@@ -219,7 +271,22 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
                 />
               </label>
               <label>
-                Program Type
+                Department
+                <select
+                  value={formData.department}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, department: event.target.value }))}
+                  required
+                >
+                  <option value="">Select department</option>
+                  {courseDepartmentOptions.map((department) => (
+                    <option key={department} value={department}>
+                      {department}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Course Type
                 <input
                   value={formData.type}
                   onChange={(event) => setFormData((prev) => ({ ...prev, type: event.target.value }))}
@@ -252,8 +319,7 @@ function Programlist({ programs, onSaveProgram, onDeleteProgram }) {
                   onChange={(event) => setFormData((prev) => ({ ...prev, status: event.target.value }))}
                 >
                   <option value="Active">Active</option>
-                  <option value="Phased Out">Phased Out</option>
-                  <option value="Under Review">Under Review</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </label>
               <label className="form-span-2">

@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 const API_BASE = import.meta.env.VITE_API_URL
+const ACTIVITY_LOG_STORAGE_KEY = 'umroll_activity_logs'
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -54,6 +55,42 @@ const toYearLabel = (yearLevel) => {
   return String(yearLevel || '')
 }
 
+const readActivityLogs = () => {
+  try {
+    const raw = localStorage.getItem(ACTIVITY_LOG_STORAGE_KEY)
+    if (!raw) {
+      return []
+    }
+
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export function addActivityLog({ action, details, owner }) {
+  const existing = readActivityLogs()
+  const now = new Date().toISOString()
+
+  const nextEntry = {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+    action: String(action || 'User Action'),
+    details: String(details || ''),
+    owner: String(owner || 'System User'),
+    generated: now,
+    status: 'Logged',
+  }
+
+  const next = [nextEntry, ...existing].slice(0, 300)
+  localStorage.setItem(ACTIVITY_LOG_STORAGE_KEY, JSON.stringify(next))
+  return nextEntry
+}
+
+export function getActivityLogs() {
+  return readActivityLogs()
+}
+
 export async function getPrograms() {
   const data = await getJson('/programs')
   return toArray(data)
@@ -90,6 +127,48 @@ export async function createStudentRecord(payload) {
   return data
 }
 
+export async function getEnrollmentOptions({ studentId, term, yearLevel }) {
+  ensureConfigured()
+
+  const params = new URLSearchParams()
+  params.set('student_id', studentId)
+
+  if (term) {
+    params.set('term', term)
+  }
+
+  if (yearLevel) {
+    params.set('year_level', String(yearLevel))
+  }
+
+  const { data } = await api.get(`/enrollment/options?${params.toString()}`)
+  return data
+}
+
+export async function enrollStudent(payload) {
+  ensureConfigured()
+  const { data } = await api.post('/enrollment', payload)
+  return data
+}
+
+export async function getStudentEnrollmentHistory(studentId) {
+  ensureConfigured()
+  const encoded = encodeURIComponent(String(studentId || '').trim())
+  const { data } = await api.get(`/students/${encoded}/enrollment-history`)
+  return data
+}
+
+export async function searchStudents(query) {
+  ensureConfigured()
+  const q = String(query || '').trim()
+  if (!q) {
+    return []
+  }
+  const encoded = encodeURIComponent(q)
+  const { data } = await api.get(`/students/search?q=${encoded}`)
+  return toArray(data)
+}
+
 export async function getSectionRecords(section) {
   if (section === 'students') {
     const data = await getJson('/students')
@@ -98,9 +177,10 @@ export async function getSectionRecords(section) {
     return students.map((student) => ({
       student_id: student.student_number || student.id || 'N/A',
       full_name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'N/A',
+      department: student.course?.department || 'N/A',
       program: student.course?.code || student.program_code || 'N/A',
       year: `${toYearLabel(student.year_level)} Year`,
-      status: student.status || 'N/A',
+      status: 'Enrolled',
     }))
   }
 
@@ -115,15 +195,27 @@ export async function getSectionRecords(section) {
   }
 
   if (section === 'reports') {
-    const data = await getJson('/school-days')
-    const days = toArray(data)
+    const activityLogs = getActivityLogs()
 
-    return days.map((day) => ({
-      report: day.event_name || 'Daily Academic Calendar',
-      owner: day.owner || 'Registrar Office',
-      generated: day.school_date || day.date || 'N/A',
-      status: day.is_holiday ? 'No Classes' : 'Published',
+    const activityRows = activityLogs.map((entry) => ({
+      category: 'Activity',
+      action: entry.action || 'User Action',
+      details: entry.details || '-',
+      performed_by: entry.owner || 'System User',
+      timestamp: entry.generated || 'N/A',
+      status: entry.status || 'Logged',
     }))
+
+    return activityRows.sort((left, right) => {
+      const leftTime = Date.parse(left.timestamp)
+      const rightTime = Date.parse(right.timestamp)
+
+      if (Number.isNaN(leftTime) || Number.isNaN(rightTime)) {
+        return 0
+      }
+
+      return rightTime - leftTime
+    })
   }
 
   if (section === 'settings') {

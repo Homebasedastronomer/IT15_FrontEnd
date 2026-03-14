@@ -4,6 +4,12 @@
   font-weight: 400;
   color: #18243d;
   background-color: #f3f6fd;
+  --app-text: #18243d;
+  --app-bg: radial-gradient(circle at top, #e8f0ff 0%, #f3f6fd 45%, #eef2fb 100%);
+  --panel-bg: rgba(255, 255, 255, 0.9);
+  --panel-border: rgba(112, 136, 184, 0.2);
+  --panel-shadow: 0 10px 28px rgba(35, 58, 99, 0.08);
+  --muted-text: #5b6d8d;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -18,8 +24,17 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #e8f0ff 0%, #f3f6fd 45%, #eef2fb 100%);
-  color: #18243d;
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+body.theme-dark {
+  --app-text: #e4ecf9;
+  --app-bg: radial-gradient(circle at top, #1b2744 0%, #131c31 42%, #0d1423 100%);
+  --panel-bg: rgba(18, 27, 45, 0.9);
+  --panel-border: rgba(125, 149, 194, 0.28);
+  --panel-shadow: 0 14px 34px rgba(1, 7, 20, 0.52);
+  --muted-text: #a4b6d7;
 }
 
 #root {
@@ -647,11 +662,11 @@ input {
 .panel {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(112, 136, 184, 0.2);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 16px;
   padding: 1rem;
-  box-shadow: 0 10px 28px rgba(35, 58, 99, 0.08);
+  box-shadow: var(--panel-shadow);
 }
 
 .panel::after {
@@ -670,7 +685,7 @@ input {
 
 .panel-header p {
   margin: 0.2rem 0 0;
-  color: #5b6d8d;
+  color: var(--muted-text);
   font-size: 0.9rem;
 }
 
@@ -914,7 +929,7 @@ input {
 
 .status-text {
   margin: 0.9rem 0 0;
-  color: #5d6e8c;
+  color: var(--muted-text);
 }
 
 .status-text.error {
@@ -1496,6 +1511,137 @@ input {
   min-width: 620px;
 }
 
+.records-search-row {
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.records-search-input {
+  width: min(420px, 100%);
+  border: 1px solid #cddaf0;
+  border-radius: 10px;
+  padding: 0.58rem 0.72rem;
+  font: inherit;
+  color: #2f466f;
+  background: #fff;
+}
+
+.records-search-input:focus {
+  outline: 2px solid #aac3ee;
+  outline-offset: 1px;
+}
+
+.records-search-meta {
+  color: #58709a;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.reports-filter-row {
+  margin-bottom: 0.8rem;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(160px, 210px)) auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.reports-filter-select {
+  border: 1px solid #cddaf0;
+  border-radius: 10px;
+  padding: 0.58rem 0.64rem;
+  font: inherit;
+  color: #2f466f;
+  background: #fff;
+}
+
+.reports-filter-select:focus {
+  outline: 2px solid #aac3ee;
+  outline-offset: 1px;
+}
+
+.theme-settings-card {
+  margin-bottom: 0.8rem;
+  border: 1px solid #d4e0f2;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.theme-settings-card h4 {
+  margin: 0;
+  color: #2a446f;
+}
+
+.theme-settings-card p {
+  margin: 0.25rem 0 0;
+  color: #5e7397;
+  font-size: 0.9rem;
+}
+
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.theme-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.theme-switch-track {
+  width: 54px;
+  height: 30px;
+  border-radius: 999px;
+  background: #d8e3f6;
+  border: 1px solid #b8cae8;
+  position: relative;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.theme-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(40, 66, 108, 0.25);
+  transition: transform 0.25s ease;
+}
+
+.theme-switch-label {
+  font-size: 0.88rem;
+  color: #36537f;
+  font-weight: 700;
+}
+
+.theme-switch input:checked + .theme-switch-track {
+  background: #4f8cff;
+  border-color: #3f74d2;
+}
+
+.theme-switch input:checked + .theme-switch-track .theme-switch-knob {
+  transform: translateX(24px);
+}
+
+.theme-switch input:focus-visible + .theme-switch-track {
+  outline: 2px solid #aac3ee;
+  outline-offset: 2px;
+}
+
 .inline-student-form {
   margin-bottom: 0.8rem;
   display: grid;
@@ -1503,16 +1649,27 @@ input {
   gap: 0.5rem;
 }
 
+.inline-enrollment-form {
+  margin-bottom: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
 .inline-student-form input,
 .inline-student-form select,
-.inline-student-form button {
+.inline-student-form button,
+.inline-enrollment-form input,
+.inline-enrollment-form select,
+.inline-enrollment-form button {
   border: 1px solid #d3dced;
   border-radius: 10px;
   padding: 0.55rem 0.65rem;
   font: inherit;
 }
 
-.inline-student-form button {
+.inline-student-form button,
+.inline-enrollment-form button {
   border: 0;
   color: #fff;
   background: #2f64f1;
@@ -1520,9 +1677,111 @@ input {
   cursor: pointer;
 }
 
-.inline-student-form button:disabled {
+.inline-student-form button:disabled,
+.inline-enrollment-form button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.enrollment-availability-panel {
+  border: 1px solid #dbe5f6;
+  border-radius: 14px;
+  background: #f8fbff;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.student-suggestion-box {
+  border: 1px solid #d6e2f5;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 0.4rem;
+  margin: -0.35rem 0 0.8rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.student-suggestion-box p {
+  margin: 0.2rem 0.3rem;
+  color: #5b7297;
+  font-size: 0.85rem;
+}
+
+.student-suggestion-item {
+  border: 1px solid #d4e0f3;
+  border-radius: 10px;
+  background: #f9fbff;
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.student-suggestion-item strong {
+  color: #294671;
+  font-size: 0.9rem;
+}
+
+.student-suggestion-item span {
+  color: #5b7397;
+  font-size: 0.82rem;
+}
+
+.enrollment-availability-header h4 {
+  margin: 0;
+  color: #27416b;
+}
+
+.enrollment-availability-header p {
+  margin: 0.2rem 0 0;
+  color: #4e6287;
+  font-size: 0.9rem;
+}
+
+.enrollment-year-grid {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.enrollment-year-card {
+  border: 1px solid #cdd9ee;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.65rem 0.72rem;
+}
+
+.enrollment-year-card h5 {
+  margin: 0 0 0.45rem;
+  color: #2f4d79;
+}
+
+.enrollment-year-card ul {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.enrollment-year-card li {
+  color: #334d72;
+}
+
+.enrollment-year-card li strong {
+  margin-right: 0.35rem;
+}
+
+.enrollment-year-card li span {
+  color: #4f6284;
+  font-size: 0.88rem;
+}
+
+.enrollment-year-card p {
+  margin: 0;
+  color: #61748f;
+  font-size: 0.88rem;
 }
 
 .settings-inline-input {
@@ -1530,6 +1789,80 @@ input {
   border: 1px solid #d4dded;
   border-radius: 8px;
   padding: 0.35rem 0.45rem;
+}
+
+.row-action-btn {
+  border: 1px solid #bfcfea;
+  border-radius: 8px;
+  background: #fff;
+  color: #2d4d7d;
+  padding: 0.36rem 0.62rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.row-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.student-history-modal {
+  width: min(980px, 95vw);
+}
+
+.student-history-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.65rem;
+}
+
+.student-history-year-card {
+  border: 1px solid #cfdcf2;
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: #f9fbff;
+}
+
+.student-history-year-card h4 {
+  margin: 0;
+  color: #2b4672;
+}
+
+.student-history-year-card p {
+  margin: 0.3rem 0 0.5rem;
+  color: #5a6f92;
+  font-size: 0.88rem;
+}
+
+.student-history-term-block {
+  border-top: 1px dashed #d9e3f4;
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.student-history-term-block h5 {
+  margin: 0;
+  color: #345480;
+}
+
+.student-history-term-block ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.student-history-term-block li {
+  color: #334d72;
+  font-size: 0.88rem;
+}
+
+.student-history-term-block p {
+  margin: 0.3rem 0 0;
+  color: #677e9f;
+  font-size: 0.84rem;
 }
 
 .records-table th,
@@ -1543,6 +1876,89 @@ input {
 .records-table th {
   color: #3f547c;
   text-transform: capitalize;
+}
+
+body.theme-dark .topbar-date,
+body.theme-dark .weather-badge {
+  background: rgba(110, 142, 204, 0.18);
+  color: #d7e3fb;
+}
+
+body.theme-dark .overview-card,
+body.theme-dark .weather-panel,
+body.theme-dark .theme-settings-card,
+body.theme-dark .records-search-input,
+body.theme-dark .reports-filter-select,
+body.theme-dark .settings-inline-input,
+body.theme-dark .student-suggestion-box,
+body.theme-dark .student-suggestion-item,
+body.theme-dark .enrollment-year-card,
+body.theme-dark .enrollment-availability-panel,
+body.theme-dark .student-history-year-card {
+  background: rgba(22, 34, 58, 0.86);
+  border-color: rgba(124, 151, 199, 0.28);
+}
+
+body.theme-dark .records-table th,
+body.theme-dark .records-table td,
+body.theme-dark .student-history-term-block {
+  border-color: rgba(121, 146, 191, 0.35);
+}
+
+body.theme-dark .mobile-menu-btn,
+body.theme-dark .mobile-nav-link,
+body.theme-dark .mobile-logout,
+body.theme-dark .records-action-btn,
+body.theme-dark .chart-action-btn,
+body.theme-dark .row-action-btn {
+  background: rgba(38, 58, 95, 0.88);
+  color: #dfe9fd;
+  border-color: rgba(134, 161, 214, 0.45);
+}
+
+body.theme-dark .mobile-brand h1,
+body.theme-dark .mobile-brand p,
+body.theme-dark .mobile-user,
+body.theme-dark .topbar h2,
+body.theme-dark .stat-value,
+body.theme-dark .records-table,
+body.theme-dark .student-suggestion-item strong,
+body.theme-dark .enrollment-availability-header h4,
+body.theme-dark .enrollment-year-card h5,
+body.theme-dark .student-history-year-card h4,
+body.theme-dark .student-history-term-block h5 {
+  color: #e4ecf9;
+}
+
+body.theme-dark .topbar p,
+body.theme-dark .stat-label,
+body.theme-dark .overview-card p,
+body.theme-dark .status-text,
+body.theme-dark .records-search-meta,
+body.theme-dark .student-suggestion-item span,
+body.theme-dark .enrollment-availability-header p,
+body.theme-dark .enrollment-year-card li,
+body.theme-dark .enrollment-year-card li span,
+body.theme-dark .enrollment-year-card p,
+body.theme-dark .student-history-year-card p,
+body.theme-dark .student-history-term-block li,
+body.theme-dark .student-history-term-block p,
+body.theme-dark .theme-settings-card p,
+body.theme-dark .panel-header p {
+  color: #a4b6d7;
+}
+
+body.theme-dark .theme-switch-label {
+  color: #dbe7fd;
+}
+
+body.theme-dark .theme-switch-track {
+  background: rgba(125, 150, 193, 0.3);
+  border-color: rgba(140, 166, 209, 0.45);
+}
+
+body.theme-dark .theme-switch-knob {
+  background: #f2f6ff;
 }
 
 @keyframes floatDrift {
@@ -1659,6 +2075,24 @@ input {
   .inline-student-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .records-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reports-filter-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .records-search-input {
+    width: 100%;
+  }
+
+  .inline-enrollment-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 900px) {
@@ -1742,6 +2176,14 @@ input {
   }
 
   .inline-student-form {
+    grid-template-columns: 1fr;
+  }
+
+  .inline-enrollment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .student-history-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1954,6 +2396,167 @@ input {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+}
+
+.attendance-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.attendance-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.attendance-modal-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.attendance-month-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4f658c;
+}
+
+.attendance-month-picker {
+  border: 1px solid #c9d9f3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #2e4a74;
+  font-weight: 700;
+  padding: 0.32rem 0.54rem;
+}
+
+.chart-action-btn {
+  border: 1px solid #bcd1f2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #2f4f7f;
+  padding: 0.45rem 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.attendance-calendar-modal {
+  width: min(980px, 96vw);
+}
+
+.attendance-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0.75rem;
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.26rem 0.58rem;
+  border: 1px solid transparent;
+}
+
+.legend-chip.high {
+  background: #def7ea;
+  color: #175c38;
+  border-color: #8fddb5;
+}
+
+.legend-chip.medium {
+  background: #fff6de;
+  color: #7a5a15;
+  border-color: #f1d384;
+}
+
+.legend-chip.low {
+  background: #ffe5e5;
+  color: #7a2330;
+  border-color: #f0acb5;
+}
+
+.attendance-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.attendance-weekday {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4d668f;
+  padding: 0.2rem 0;
+}
+
+.attendance-day-cell {
+  min-height: 92px;
+  border: 1px solid #d2dff4;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.44rem;
+  display: grid;
+  align-content: start;
+  gap: 0.24rem;
+}
+
+.attendance-day-cell.blank {
+  border: 0;
+  background: transparent;
+  min-height: 0;
+}
+
+.attendance-day-cell strong {
+  font-size: 0.82rem;
+  color: #2f4a73;
+}
+
+.attendance-day-cell.high {
+  background: #f5fff9;
+  border-color: #bde9ce;
+}
+
+.attendance-day-cell.medium {
+  background: #fffbf0;
+  border-color: #f2e0af;
+}
+
+.attendance-day-cell.low {
+  background: #fff7f7;
+  border-color: #efc3c8;
+}
+
+.attendance-percent {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #29466e;
+}
+
+.attendance-meter {
+  height: 6px;
+  border-radius: 999px;
+  background: #e7eef9;
+  overflow: hidden;
+}
+
+.attendance-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #46d6a9 0%, #3fc6f0 100%);
+}
+
+.attendance-empty {
+  font-size: 0.74rem;
+  color: #6f81a1;
 }
 
 .module-card {
@@ -2223,6 +2826,31 @@ input {
 .program-detail-card .year-level-card {
   background: #ffffff;
   border-color: #cfdaee;
+}
+
+body.theme-dark .modal-card.panel,
+body.theme-dark .detail-modal.panel {
+  background: rgba(18, 27, 45, 0.98);
+  border-color: rgba(125, 149, 194, 0.36);
+  color: #e4ecf9;
+}
+
+body.theme-dark .module-detail-card .panel-header h3,
+body.theme-dark .module-detail-card .module-detail-grid p,
+body.theme-dark .module-detail-card .module-detail-grid strong,
+body.theme-dark .module-detail-card .year-level-card h4,
+body.theme-dark .module-detail-card .year-level-card li,
+body.theme-dark .module-detail-card .year-level-card p {
+  color: #e4ecf9;
+}
+
+body.theme-dark .module-detail-card .panel-header p,
+body.theme-dark .subject-detail-card .module-detail-grid p,
+body.theme-dark .program-detail-card .module-detail-grid p,
+body.theme-dark .subject-detail-card .year-level-card,
+body.theme-dark .program-detail-card .year-level-card {
+  background: rgba(32, 48, 78, 0.9);
+  border-color: rgba(128, 154, 201, 0.42);
 }
 
 .module-form-grid {

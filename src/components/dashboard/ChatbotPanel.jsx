@@ -7,7 +7,7 @@ function ChatbotPanel({ onAskBot }) {
     {
       id: 1,
       role: 'bot',
-      text: 'Hello! I can answer quick enrollment and schedule questions.',
+      text: 'Hello! Ask me about totals, attendance, student lookup, enrollment history, or activity logs.',
     },
   ])
 
@@ -64,7 +64,7 @@ function ChatbotPanel({ onAskBot }) {
         <input
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
-          placeholder="Ask about enrollment, classes, or deadlines..."
+          placeholder="Try: total programs, average attendance, find student UM-0001, history UM-0001"
         />
         <button type="submit" disabled={!canSend}>
           Send

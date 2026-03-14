@@ -259,7 +259,7 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
           },
           {
             key: 'program',
-            label: 'Program',
+            label: 'Course',
             value: programFilter,
             onChange: setProgramFilter,
             options: programOptions,
@@ -391,7 +391,7 @@ function Subjectlist({ subjects, programs, onSaveSubject, onDeleteSubject }) {
                 </select>
               </label>
               <label>
-                Program
+                Course
                 <select
                   value={formData.programCode}
                   onChange={(event) =>

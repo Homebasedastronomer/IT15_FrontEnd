@@ -2,8 +2,8 @@ function Programdetails({ program, onEdit, onDelete }) {
   if (!program) {
     return (
       <article className="panel module-empty">
-        <h3>Program Details</h3>
-        <p>Select a program to view complete information.</p>
+        <h3>Course Details</h3>
+        <p>Select a course to view complete information.</p>
       </article>
     )
   }
@@ -19,10 +19,13 @@ function Programdetails({ program, onEdit, onDelete }) {
 
       <div className="module-detail-grid">
         <p>
-          <strong>Program Code:</strong> {program.code}
+          <strong>Course Code:</strong> {program.code}
         </p>
         <p>
-          <strong>Program Type:</strong> {program.type}
+          <strong>Course Type:</strong> {program.type}
+        </p>
+        <p>
+          <strong>Department:</strong> {program.department || 'N/A'}
         </p>
         <p>
           <strong>Duration:</strong> {program.duration}

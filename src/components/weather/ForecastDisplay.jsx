@@ -11,6 +11,20 @@ const getForecastScene = (summary = '', isDay = true) => {
   return 'cloud'
 }
 
+const getForecastSceneFromCode = (code, isDay = true) => {
+  const numericCode = Number(code)
+
+  if (numericCode === 0) return isDay ? 'sun' : 'moon'
+  if ([1, 2].includes(numericCode)) return isDay ? 'sun' : 'moon'
+  if (numericCode === 3) return 'cloud'
+  if ([45, 48].includes(numericCode)) return 'fog'
+  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(numericCode)) return 'rain'
+  if ([71, 73, 75, 77, 85, 86].includes(numericCode)) return 'snow'
+  if ([95, 96, 99].includes(numericCode)) return 'storm'
+
+  return 'cloud'
+}
+
 const FORECAST_ICON_META = {
   sun: { label: 'Sunny' },
   moon: { label: 'Clear Night' },
@@ -95,7 +109,9 @@ function ForecastDisplay({ forecast, isDay }) {
   return (
     <div className="weather-forecast" aria-label="Five day forecast">
       {forecast.slice(0, 5).map((day) => {
-        const iconType = getForecastScene(day.summary, isDay)
+        const iconType = Number.isFinite(Number(day.weatherCode))
+          ? getForecastSceneFromCode(day.weatherCode, isDay)
+          : getForecastScene(day.summary, isDay)
         const iconMeta = FORECAST_ICON_META[iconType] || FORECAST_ICON_META.cloud
 
         return (

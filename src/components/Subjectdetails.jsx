@@ -32,7 +32,10 @@ function Subjectdetails({ subject, onEdit, onDelete }) {
           <strong>Semester/Term Offered:</strong> {subject.offeredIn}
         </p>
         <p>
-          <strong>Program Assignment:</strong> {subject.programCode}
+          <strong>Course Assignment:</strong> {subject.programCode}
+        </p>
+        <p>
+          <strong>Department:</strong> {subject.department || 'N/A'}
         </p>
         <p>
           <strong>Term Indicator:</strong> {subject.termIndicator}

@@ -19,7 +19,8 @@ function Subjectcard({ subject, onSelect }) {
       <p>{subject.units} Units</p>
       <p>{yearLevel}</p>
       <p>{subject.offeredIn}</p>
-      <p>Program: {subject.programCode}</p>
+      <p>Department: {subject.department || 'N/A'}</p>
+      <p>Course: {subject.programCode}</p>
 
       <div className="module-card-actions">
         <button type="button" onClick={() => onSelect(subject)}>

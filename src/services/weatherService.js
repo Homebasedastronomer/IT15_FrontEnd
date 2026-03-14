@@ -75,6 +75,7 @@ async function getWeatherByCoordinates(latitude, longitude, locationLabel = 'Cam
 
   const forecast = (data.daily.time || []).map((date, index) => ({
     date,
+    weatherCode: data.daily.weather_code?.[index],
     summary: toWeatherLabel(data.daily.weather_code?.[index]),
     high: data.daily.temperature_2m_max?.[index],
     low: data.daily.temperature_2m_min?.[index],

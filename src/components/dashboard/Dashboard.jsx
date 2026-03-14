@@ -51,7 +51,7 @@ function Dashboard({
     ...programs.map((program) => ({
       id: `program-${program.id}`,
       label: `${program.code} · ${program.name}`,
-      type: 'Program',
+      type: 'Course',
       createdAt: program.createdAt,
     })),
     ...subjects.map((subject) => ({
@@ -64,11 +64,20 @@ function Dashboard({
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5)
 
+  const handleAskBot = (message) => askEnrollmentBot(message, {
+    programs,
+    subjects,
+    enrollmentTrend,
+    courseDistribution,
+    attendanceTrend,
+    weather,
+  })
+
   return (
     <section className="module-stack">
       <div className="overview-grid">
         <article className="overview-card panel">
-          <p className="stat-label">Total Programs</p>
+          <p className="stat-label">Total Courses</p>
           <h3 className="stat-value">{programs.length}</h3>
         </article>
         <article className="overview-card panel">
@@ -76,7 +85,7 @@ function Dashboard({
           <h3 className="stat-value">{subjects.length}</h3>
         </article>
         <article className="overview-card panel">
-          <p className="stat-label">Program Activity</p>
+          <p className="stat-label">Course Activity</p>
           <h3 className="stat-value">
             {activePrograms} Active · {inactivePrograms} Inactive
           </h3>
@@ -91,11 +100,11 @@ function Dashboard({
         <article className="panel chart-card chart-card-modern">
           <div className="chart-head">
             <div className="panel-header">
-              <h3>Program Status Overview</h3>
+              <h3>Course Status Overview</h3>
             </div>
             <div className="chart-badge-group">
               <span className="chart-badge">{activeRate}% Active</span>
-              <span className="chart-badge muted">{programs.length} Total Programs</span>
+              <span className="chart-badge muted">{programs.length} Total Courses</span>
             </div>
           </div>
 
@@ -170,7 +179,7 @@ function Dashboard({
       <section className="lower-grid">
         <article className="panel recent-panel">
           <div className="panel-header">
-            <h3>Recently Added Programs or Subjects</h3>
+            <h3>Recently Added Courses or Subjects</h3>
           </div>
           <ul className="recent-list">
             {recentItems.map((item) => (
@@ -188,7 +197,7 @@ function Dashboard({
           onSearchLocation={onSearchLocation}
           searchLoading={weatherSearchLoading}
         />
-        <ChatbotPanel onAskBot={askEnrollmentBot} />
+        <ChatbotPanel onAskBot={handleAskBot} />
       </section>
     </section>
   )

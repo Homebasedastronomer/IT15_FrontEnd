@@ -9,6 +9,7 @@ function Programcard({ program, onSelect }) {
       </div>
 
       <p className="module-card-title">{program.name}</p>
+      <p>Department: {program.department || 'N/A'}</p>
       <p>
         {program.type} · {program.duration}
       </p>
