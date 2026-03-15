@@ -1,66 +1,136 @@
-<<<<<<< HEAD
-# IT15_FrontEnd
-=======
-# DOLLENTE Enrollment System Frontend Prototype
+# IT15 Frontend - Enrollment System
 
-Modern React + Vite frontend prototype for the Integrative Programming Enrollment System.
+Frontend application for the Integrative Programming Enrollment System, built with React and Vite.
 
-## Features
+## Required Deliverables Status
 
-- Creative and responsive login page (frontend-only authentication simulation)
-- Route-based redirect flow (`/login` ➜ `/dashboard`)
-- Structured dashboard navigation:
-	- Students
-	- Courses
-	- Enrollment
-	- Reports
-	- Settings
-- Overview widgets and realistic enrollment analytics charts
-- Weather API integration (Open-Meteo)
-- Simple chatbot interface with mock assistant service
-- Mock service layer organized for future Laravel REST API integration
+- Complete frontend source code: available in this repository
+- Detailed README with setup instructions: this file
+- .env.example with required environment variables: included
+- API documentation (endpoints and expected responses): see API_DOCUMENTATION.md
+- List of technologies with versions: see Technology Stack section
 
-## Tech Stack
+## Key Features
 
-- React 19
-- Vite 7
-- React Router DOM
-- Recharts
+- Authentication flow with backend login endpoint
+- Protected dashboard routes
+- Program and subject management views
+- Student creation and enrollment workflow
+- Enrollment history and student search
+- Dashboard analytics (enrollment, attendance, distribution)
+- Integrated weather data with location search
+- Chatbot helper powered by live dashboard/service data
+
+## Technology Stack (with Versions)
+
+### Core
+
+- React: 19.2.0
+- React DOM: 19.2.0
+- React Router DOM: 7.13.0
+- Vite: 7.3.1
+- Axios: 1.13.6
+- Recharts: 3.7.0
+
+### Development Tooling
+
+- ESLint: 9.39.1
+- @eslint/js: 9.39.1
+- @vitejs/plugin-react: 5.1.1
+- eslint-plugin-react-hooks: 7.0.1
+- eslint-plugin-react-refresh: 0.4.24
+- globals: 16.5.0
 
 ## Project Structure
 
-```
+```text
 src/
-	components/
-		dashboard/
-		navigation/
-	layouts/
-	pages/
-	services/
+  components/
+    auth/
+    common/
+    dashboard/
+    navigation/
+  layouts/
+  pages/
+  services/
+public/
 ```
 
-## Run Locally
+## Setup Instructions
+
+Use the following steps in order.
+
+### 1. Backend Setup (Laravel API)
 
 ```bash
+cd /Users/markkian/Documents/GitHub/IT15_BackEnd
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
+```
+
+Expected backend base URL used by frontend:
+- http://127.0.0.1:8000/api
+
+### 2. Frontend Setup (This Project)
+
+```bash
+cd IT15_FrontEnd
 npm install
+cp .env.example .env
+npm start
+```
+
+Alternative dev command:
+
+```bash
 npm run dev
 ```
 
-Then open the local Vite URL and sign in from `/login`.
+Open the displayed local URL (usually http://localhost:5173).
 
-## Build
+## Environment Variables
 
-```bash
-npm run build
+Create a local .env file based on .env.example.
+
+Required variables:
+
+- VITE_API_URL: base URL of backend API
+
+Example:
+
+```env
+VITE_API_URL=http://127.0.0.1:8000/api
 ```
 
-## API-Ready Notes
+## API Documentation
 
-The files in `src/services/` already isolate data access:
+Full API endpoint documentation with expected responses is available in:
 
-- `mockApi.js`
-- `weatherService.js`
-- `chatbotService.js`
+- API_DOCUMENTATION.md
 
-For Laravel integration, replace the mock exports with real `fetch`/`axios` calls to your REST endpoints while keeping UI components unchanged.
->>>>>>> 8f86fc7 (Initial commit)
+## Available Scripts
+
+- npm start: start dev server (alias for Vite)
+- npm run dev: start Vite dev server
+- npm run build: production build
+- npm run preview: preview production build
+- npm run lint: run ESLint checks
+
+## Documentation Checklist for Submission
+
+- Add at least 5 screenshots of the working application
+- Include API documentation (already provided)
+- Include list of technologies with versions (already provided)
+- Prepare a 3-5 minute demo video
+
+## Suggested Screenshot List
+
+- Login screen
+- Dashboard overview
+- Programs/Course offerings page
+- Students and enrollment page
+- Reports page with filters/export
+
